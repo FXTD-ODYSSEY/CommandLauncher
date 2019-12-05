@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0"
+    ProductType="Application"
+    AutodeskProduct="Maya"
+    Name="CommandSearch"
+    Description="CommandSearch"
+    AppVersion="2.0.2"
+    Author="Robert Joosten"
+	AppNameSpace="appstore.exchange.autodesk.com"
+    HelpFile="./Contents/docs/index.html"
+    OnlineDocumentation="http://rjoostenart.com/"
+    ProductCode="*"
+    UpgradeCode="{C094C44B-5E8B-4C23-90E5-A767696C9AB7}" >
+     
+    <CompanyDetails Name="Robert Joosten"
+        Phone=""
+        Url="http://rjoostenart.com/"
+        Email="rwm.joosten@gmail.com" />
+ 
+    <!-- Prevent to load in earlier version than Maya 2014 -->
+	 <RuntimeRequirements SupportPath="./Contents/docs" OS="win64" Platform="Maya" SeriesMin="2014"  />
+    <Components>
+        <RuntimeRequirements SupportPath="./Contents/docs" OS=" win64" Platform="Maya" SeriesMin="2014" />
+        <MayaEnv expr="MAYA_SCRIPT_PATH+:=shelves" />
+        <ComponentEntry ModuleName="./Contents/icons/cs.png" />
+		<ComponentEntry ModuleName="./Contents/icons/CommandSearch.ico" />
+       		<ComponentEntry ModuleName="./Contents/scripts/userSetup.py" />		
+	</Components>
+	
+</ApplicationPackage>
