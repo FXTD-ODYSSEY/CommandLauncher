@@ -84,7 +84,8 @@ class ResultsMenu(utils.QMenu):
         self.position()
 
         # show menu
-        utils.QMenu.show(self)  
+        self.setVisible(True)
+        # utils.QMenu.show(self)  
             
 class ResultsWindow(utils.QDockWidget):
     """

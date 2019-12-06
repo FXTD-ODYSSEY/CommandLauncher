@@ -6,7 +6,7 @@ __date__ = '2019-12-05 14:27:16'
 
 from . import manager, results, utils
 from .. import commands
-
+from maya import cmds
 # ---------------------------------------------------------------------------
 
 BAR_CLOSE_ICON = ":/closeBar.png"
@@ -36,7 +36,8 @@ class SearchWidget(utils.QWidget):
         
         self.timer = utils.QTimer()
         self.timer_count = 0
-        self.timer.setInterval(200)
+        self.tab_long_press = 0
+        self.timer.setInterval(100)
         self.timer.timeout.connect(self.timerEvent)
 
         # NOTE variable
@@ -46,21 +47,12 @@ class SearchWidget(utils.QWidget):
         layout = utils.QHBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(1)
-            
-        # # NOTE create bar
-        # self.bar = utils.QPushButton(self)
-        # self.bar.setFlat(True)
-        # self.bar.setFixedWidth(8)
-        # self.bar.setFixedHeight(25)   
-        # self.bar.setIcon(utils.QPixmap(BAR_CLOSE_ICON))
-        # self.bar.setIconSize(utils.QSize(8,25))
         
         # NOTE create container
         self.container = utils.QWidget(self)
         self.container.setFixedWidth(250)
         
         # add widgets
-        # layout.addWidget(self.bar)
         layout.addWidget(self.container)
         
         # create layout
@@ -76,7 +68,6 @@ class SearchWidget(utils.QWidget):
         self.search_button.setIconSize(utils.QSize(25,25))   
         
         
-        # self.bar.released.connect(self.switch)
         
         self.manger_menu = manager.ManagerMenu(self)
         self.search_button.setMenu(self.manger_menu)
@@ -107,9 +98,6 @@ class SearchWidget(utils.QWidget):
         app = utils.QApplication.instance()
         app.installEventFilter(self)
 
-        # print dir(self)
-        # print dir(self.search)
-        # print dir(self.results)
     # ------------------------------------------------------------------------
 
     def timerEvent(self):
@@ -120,24 +108,26 @@ class SearchWidget(utils.QWidget):
         如果计时器累加了两次则说明是单击
         停止计时器并且触发单击事件
         '''
-        self.timer_count += 1
-        if self.timer_count > 1:
-            self.timer_count = 0
-            self.timer.stop()
-            self.show()
+        self.timer.stop()
+        if self.timer_count < 1:
+            # NOTE 如果小于等于 3 说明不是长按
+            if self.tab_long_press <=3:
+                self.show()
+            self.tab_long_press = 0
+        else:
+            self.hide()
+            self.results.hide()
+            
+        self.timer_count = 0
 
     def eventFilter(self,receiver,event):
         # NOTE 键盘事件
         if hasattr(event,"type") and event.type() == utils.QEvent.KeyPress:
             # NOTE 敲击 Tab 键
             if event.key() == 16777217:
-                
+                self.tab_long_press += 1
                 if self.timer.isActive():
-                    # Note 说明长按了
-                    self.timer_count = 0
-                    self.timer.stop()
-                    self.hide()
-                    self.results.hide()
+                    self.timer_count += 1
                 else:
                     self.timer.start()
 
@@ -145,23 +135,31 @@ class SearchWidget(utils.QWidget):
             elif event.key() == 16777216:
                 self.hide()
                 self.results.hide()
-            
-            # # NOTE 敲击下键
-            # elif event.key() == 16777237:
-            #     print "press arrow"
+                cmds.selectPref(ps=0)
+                self.tab_long_press = 0
+            else:
+                self.tab_long_press = 0
 
+            
         # Note 鼠标事件 QEvent.Type.MouseButtonPress 为 2
         elif hasattr(event,"type") and event.type() == 2 and self.isVisible():
+            print receiver
             # Note 过滤接受的组件是否是自己 避免其他组件触发 如 PySide2 QWindow 也会传入进来
             if (
                 'QWindow' not in str(receiver) and
                 receiver not in self.children() and
                 receiver not in self.container.children() and
                 receiver not in self.manger_menu.children() and
+                receiver.window() != self.results and
                 receiver != self and
                 type(receiver.parent()) != utils.Divider
             ):
-                self.setVisible(False)
+                self.hide()
+                cmds.selectPref(ps=0)
+
+            self.tab_long_press = 0
+
+
         return False   
     
     # ------------------------------------------------------------------------
@@ -210,7 +208,7 @@ class SearchWidget(utils.QWidget):
 
         # set focus
         self.search.setFocus()
-        
+
     # ------------------------------------------------------------------------
     
     def closeWindowEvent(self):
@@ -224,18 +222,6 @@ class SearchWidget(utils.QWidget):
         self.typing()
 
     # ------------------------------------------------------------------------
-        
-    # def switch(self):
-    #     """
-    #     Switch visibility of the widget, it is build in the same style as all
-    #     if the maya status line ui elements.
-    #     """
-    #     if self.container.isVisible():
-    #         self.container.setVisible(False)
-    #         self.bar.setIcon(utils.QPixmap(BAR_CLOSE_ICON))
-    #     else:
-    #         self.container.setVisible(True)
-    #         self.bar.setIcon(utils.QPixmap(BAR_OPEN_ICON))
 
     def show(self):
         pos = utils.QCursor.pos()
@@ -268,7 +254,7 @@ class SearchEdit(utils.QLineEdit):
         if e.button() == utils.Qt.LeftButton:                
             if not self.parent.results.isVisible():
                 self.parent.typing()
-        utils.QLineEdit.mouseReleaseEvent(self, e)
+        return super(SearchEdit,self).mouseReleaseEvent(e)
 
     def keyPressEvent(self,event):
         key = event.key()
@@ -285,23 +271,34 @@ class SearchEdit(utils.QLineEdit):
         if self.selected != 0:
             item = self.currentItem()
             item.setStyleSheet("")
-
+            
         
         # NOTE 按左箭头
         if key == 16777234:
+            if self.selected <= 0:
+                self.update()
+                return super(SearchEdit,self).keyPressEvent(event)
             self.vert_selected -= 1
             self.vert_selected = -1 if self.vert_selected < -1 else self.vert_selected
 
         # NOTE 按右箭头
         elif key == 16777236:
+            if self.selected <= 0:
+                self.update()
+                return super(SearchEdit,self).keyPressEvent(event)
             self.vert_selected += 1
             self.vert_selected = 1 if self.vert_selected > vert_max else self.vert_selected
 
 
         # NOTE 按上箭头
         elif key == 16777235:
+            print self.hasFocus()
             self.selected -= 1
-            self.selected = self.selected if self.selected else self.count
+            if self.selected <= 0:
+                self.selected = 0
+                self.setFocus()
+                self.update()
+                return
 
             item = self.currentItem()
      
@@ -318,7 +315,7 @@ class SearchEdit(utils.QLineEdit):
 
         # NOTE 按下箭头
         elif key == 16777237:
-            
+            print self.hasFocus()
 
             self.selected += 1
             self.selected = self.selected % self.count
@@ -336,7 +333,7 @@ class SearchEdit(utils.QLineEdit):
             print item.info.get("name")
 
         else:
-            super(SearchEdit,self).keyPressEvent(event)
+            return super(SearchEdit,self).keyPressEvent(event)
 
     def currentItem(self,dn=True):
         layout = self.results.widget.layout
