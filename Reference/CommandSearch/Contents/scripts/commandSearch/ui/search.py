@@ -143,7 +143,6 @@ class SearchWidget(utils.QWidget):
             
         # Note 鼠标事件 QEvent.Type.MouseButtonPress 为 2
         elif hasattr(event,"type") and event.type() == 2 and self.isVisible():
-            print receiver
             # Note 过滤接受的组件是否是自己 避免其他组件触发 如 PySide2 QWindow 也会传入进来
             if (
                 'QWindow' not in str(receiver) and
@@ -246,7 +245,7 @@ class SearchEdit(utils.QLineEdit):
         self.parent = parent
         self.results = results
         self.selected = 0
-        self.vert_selected = 0
+        self.options = 0
         self.scrollY = 0
     # -----------------------------------------------------------------------
 
@@ -263,36 +262,15 @@ class SearchEdit(utils.QLineEdit):
 
         self.scrollY = 0
         scroll = self.results.widget.scrollArea.verticalScrollBar()
-        self.vert_selected = 0
-        vert_max = 1
-
+        self.options = 0
 
         # NOTE 还原样式
         if self.selected != 0:
             item = self.currentItem()
-            item.setStyleSheet("")
-            
+            self.setCommandStyle(item)
         
-        # NOTE 按左箭头
-        if key == 16777234:
-            if self.selected <= 0:
-                self.update()
-                return super(SearchEdit,self).keyPressEvent(event)
-            self.vert_selected -= 1
-            self.vert_selected = -1 if self.vert_selected < -1 else self.vert_selected
-
-        # NOTE 按右箭头
-        elif key == 16777236:
-            if self.selected <= 0:
-                self.update()
-                return super(SearchEdit,self).keyPressEvent(event)
-            self.vert_selected += 1
-            self.vert_selected = 1 if self.vert_selected > vert_max else self.vert_selected
-
-
         # NOTE 按上箭头
-        elif key == 16777235:
-            print self.hasFocus()
+        if key == 16777235:
             self.selected -= 1
             if self.selected <= 0:
                 self.selected = 0
@@ -301,13 +279,12 @@ class SearchEdit(utils.QLineEdit):
                 return
 
             item = self.currentItem()
-     
             item.setStyleSheet("color:coral")
 
             # NOTE 设置滚动值
             if self.selected > 5:
-                y = scroll.value()
-                scroll.setValue(y-self.scrollY)
+                height = self.scrollHeight()
+                scroll.setValue(height)
             else:
                 scroll.setValue(0)
 
@@ -315,8 +292,6 @@ class SearchEdit(utils.QLineEdit):
 
         # NOTE 按下箭头
         elif key == 16777237:
-            print self.hasFocus()
-
             self.selected += 1
             self.selected = self.selected % self.count
 
@@ -325,12 +300,31 @@ class SearchEdit(utils.QLineEdit):
 
             # NOTE 设置滚动值
             if self.selected > 5:
-                y = scroll.value()
-                scroll.setValue(y+self.scrollY)
+                height = self.scrollHeight()
+                scroll.setValue(height)
             else:
                 scroll.setValue(0)
 
             print item.info.get("name")
+
+        # NOTE 点击 Enter 键
+        elif key == 16777220 and self.selected != 0:
+            item.exec_()
+            self.parent.hide()
+            
+        # NOTE 按左箭头
+        elif key == 16777221 and self.selected != 0:
+            self.options -= 1
+            self.options = -1 if self.options < -1 else self.options
+            
+
+        # NOTE 按右箭头
+        elif key == 16777236 and self.selected != 0:
+            self.options += 1
+            self.options = 1 if self.options > 1 else self.options
+            if self.options == 1 and not item.commandOption:
+                self.options = 0
+            
 
         else:
             return super(SearchEdit,self).keyPressEvent(event)
@@ -338,7 +332,6 @@ class SearchEdit(utils.QLineEdit):
     def currentItem(self,dn=True):
         layout = self.results.widget.layout
         item = layout.itemAt(self.selected).widget()
-        self.scrollY += item.height()
         if type(item) == utils.Divider:
 
             if dn:
@@ -347,7 +340,39 @@ class SearchEdit(utils.QLineEdit):
                 self.selected += 1
 
             item = layout.itemAt(self.selected).widget()
-            self.scrollY += item.height()
-
         return item
+    
+    def scrollHeight(self):
+        layout = self.results.widget.layout
+        height = 0
+        for i in range(self.selected):
+            item = layout.itemAt(i).widget()
+            height += item.height()
+        return height - 100
 
+    def setCommandStyle(self,item,mode=0):
+        style = "QPushButton:hover{ \
+                border: 1px solid orange; \
+                border-radius: 3px; \
+                background-color: orange; \
+            }"
+        hover = "QPushButton:hover{ \
+                border: 1px solid orange; \
+                border-radius: 3px; \
+                background-color: orange; \
+            }"
+
+        if mode == 0:
+            item.setStyleSheet("")
+            item.pin.setStyleSheet(style)
+            if item.commandOption:
+                item.option.setStyleSheet(style)
+        elif mode == -1:
+            item.setStyleSheet("")
+            item.pin.setStyleSheet(style)
+            if item.commandOption:
+                item.option.setStyleSheet(hover)
+        elif mode == 1:
+            item.setStyleSheet("")
+            item.pin.setStyleSheet(hover)
+            item.option.setStyleSheet(style)

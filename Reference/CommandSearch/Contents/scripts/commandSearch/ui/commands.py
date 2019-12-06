@@ -164,12 +164,12 @@ class Button(utils.QWidget):
         
         # create option box
         if self.commandOption:
-            option = utils.QPushButton(self)
-            option.setStyleSheet(hoverSS1)
-            option.setIcon(utils.QIcon(OPTION_ICON))
-            option.pressed.connect(self.execOption_)
-            self.setAsIcon(option)
-            layout.addWidget(option)
+            self.option = utils.QPushButton(self)
+            self.option.setStyleSheet(hoverSS1)
+            self.option.setIcon(utils.QIcon(OPTION_ICON))
+            self.option.pressed.connect(self.execOption_)
+            self.setAsIcon(self.option)
+            layout.addWidget(self.option)
             
         # set pin
         if info.get("pin"):         self.setPin()
