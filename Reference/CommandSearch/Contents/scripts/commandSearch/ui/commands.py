@@ -29,9 +29,9 @@ class Commands(utils.QWidget):
         layout.setSpacing(0)
 
         # create scroll area
-        scrollArea = utils.QScrollArea(self)
-        scrollArea.setWidgetResizable(True)
-        scrollArea.setHorizontalScrollBarPolicy(utils.Qt.ScrollBarAlwaysOff)
+        self.scrollArea = utils.QScrollArea(self)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setHorizontalScrollBarPolicy(utils.Qt.ScrollBarAlwaysOff)
         
         # create main widget widget
         self.widget = utils.QWidget()
@@ -41,8 +41,8 @@ class Commands(utils.QWidget):
         self.layout.setContentsMargins(3,0,3,0)
         self.layout.setSpacing(0)
 
-        scrollArea.setWidget(self.widget)
-        layout.addWidget(scrollArea)
+        self.scrollArea.setWidget(self.widget)
+        layout.addWidget(self.scrollArea)
         
         # spacer
         spacer = utils.QSpacerItem(
@@ -145,12 +145,12 @@ class Button(utils.QWidget):
         self.setAsIcon(icon)
         
         # create main
-        main = utils.QPushButton(info.get("name"), self)
-        main.setFixedHeight(20)
-        main.setStyleSheet(basicSS + hoverSS2)
-        main.setFlat(True)
-        main.setToolTip(info.get("hierarchy"))
-        main.released.connect(self.exec_)
+        self.main = utils.QPushButton(info.get("name"), self)
+        self.main.setFixedHeight(20)
+        self.main.setStyleSheet(basicSS + hoverSS2)
+        self.main.setFlat(True)
+        self.main.setToolTip(info.get("hierarchy"))
+        self.main.released.connect(self.exec_)
 
         # create layout
         layout = utils.QHBoxLayout(self)
@@ -160,7 +160,7 @@ class Button(utils.QWidget):
         # add widgets
         layout.addWidget(self.pin)
         layout.addWidget(icon)
-        layout.addWidget(main)
+        layout.addWidget(self.main)
         
         # create option box
         if self.commandOption:
@@ -209,9 +209,11 @@ class Button(utils.QWidget):
             return
             
         self.command.trigger()
+        self.window().setVisible(False)
    
     def execOption_(self):
         if not self.commandOption:
             return
             
         self.commandOption.trigger()
+        self.window().setVisible(False)

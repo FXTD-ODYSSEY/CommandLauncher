@@ -37,7 +37,7 @@ This command will set focus to the widget.
 ::
     import commandSearch; commandSearch.focus()  
 """
-from .ui import install
+from .ui import install,setup
 from .hotkey import *
 
 __author__    = "Robert Joosten"

@@ -39,3 +39,8 @@ def install():
     # create command search
     COMMAND_SEARCH = SearchWidget(parent)
     layout.addWidget(COMMAND_SEARCH)
+
+def setup():
+    COMMAND_LAUNCHER = SearchWidget(mayaWindow())
+    COMMAND_LAUNCHER.setVisible(False)
+

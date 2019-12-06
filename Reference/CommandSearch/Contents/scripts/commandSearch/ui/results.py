@@ -3,7 +3,7 @@ from . import commands
 
 # ----------------------------------------------------------------------------
 
-MENU_MAX_RESULTS = 20
+MENU_MAX_RESULTS = 20*4
 
 # ----------------------------------------------------------------------------
     
@@ -70,7 +70,7 @@ class ResultsMenu(utils.QMenu):
         height = self.parent.height()
         
         posY += height
-        self.move(posX+8, posY)  
+        self.move(posX, posY)  
         
     # ------------------------------------------------------------------------
 
