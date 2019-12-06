@@ -4,7 +4,7 @@ from . import commands
 # ----------------------------------------------------------------------------
 
 MENU_MAX_RESULTS = 20*8
-
+WIDTH = 300
 # ----------------------------------------------------------------------------
     
 class ResultsMenu(utils.QMenu):
@@ -24,8 +24,8 @@ class ResultsMenu(utils.QMenu):
         self.parent = parent
         
         self.setTearOffEnabled( True )
-        self.setFixedWidth(250)
-        self.setMaximumWidth(250)
+        self.setFixedWidth(WIDTH)
+        self.setMaximumWidth(WIDTH)
         self.setMaximumHeight(MENU_MAX_RESULTS*24)
 
         # create widget
@@ -47,7 +47,7 @@ class ResultsMenu(utils.QMenu):
         cursor = utils.QCursor.pos()
         menu = self.pos()
 
-        x = menu.x() <= cursor.x() <= (menu.x() + 250)
+        x = menu.x() <= cursor.x() <= (menu.x() + WIDTH)
         y = menu.y() <= cursor.y() <= (menu.y() + 12)
         
         # process if in right area
@@ -109,7 +109,7 @@ class ResultsWindow(utils.QDockWidget):
         self.setParent(parent)        
         self.setWindowFlags(utils.Qt.Window)  
         self.setWindowTitle("Search Commands")
-        self.resize(250, 500)
+        self.resize(WIDTH, 500)
         
         cw = utils.QWidget(self)
         self.setWidget(cw)

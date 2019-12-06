@@ -1,3 +1,4 @@
+# coding:utf-8
 from . import utils
     
 # ----------------------------------------------------------------------------
@@ -33,6 +34,7 @@ class Commands(utils.QWidget):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setHorizontalScrollBarPolicy(utils.Qt.ScrollBarAlwaysOff)
         
+        
         # create main widget widget
         self.widget = utils.QWidget()
         
@@ -53,8 +55,16 @@ class Commands(utils.QWidget):
         )
         self.layout.addItem(spacer)
         
+        # NOTE 注册事件 阻止键盘事件 https://forum.qt.io/topic/58787/disabling-right-and-left-arrow-shortcuts-for-the-scrollbar/11
+        self.scrollArea.verticalScrollBar().installEventFilter(self)
+        self.setFixedHeight(300)
+
     # ------------------------------------------------------------------------
-        
+    
+    def eventFilter(self,receiver,event):
+        if receiver == self.scrollArea.verticalScrollBar() and event.type() == utils.QEvent.KeyPress:
+            return False
+
     def clear(self):
         for i in reversed(range(self.layout.count()-1)):
             item = self.layout.itemAt(i)

@@ -33,12 +33,6 @@ class SearchWidget(utils.QWidget):
         # NOTE get commands
         if not commands.get():
             commands.store()
-        
-        self.timer = utils.QTimer()
-        self.timer_count = 0
-        self.tab_long_press = 0
-        self.timer.setInterval(100)
-        self.timer.timeout.connect(self.timerEvent)
 
         # NOTE variable
         self.setObjectName("CMDSearch")
@@ -50,12 +44,12 @@ class SearchWidget(utils.QWidget):
         
         # NOTE create container
         self.container = utils.QWidget(self)
-        self.container.setFixedWidth(250)
+        self.container.setFixedWidth(300)
         
-        # add widgets
+        # NOTE add widgets
         layout.addWidget(self.container)
         
-        # create layout
+        # NOTE create layout
         layout = utils.QHBoxLayout(self.container)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(1)
@@ -66,8 +60,6 @@ class SearchWidget(utils.QWidget):
         self.search_button.setFixedHeight(25)   
         self.search_button.setIcon(utils.findSearchIcon())
         self.search_button.setIconSize(utils.QSize(25,25))   
-        
-        
         
         self.manger_menu = manager.ManagerMenu(self)
         self.search_button.setMenu(self.manger_menu)
@@ -92,8 +84,14 @@ class SearchWidget(utils.QWidget):
         self.search.textChanged.connect(self.typing)
         self.search.returnPressed.connect(self.enter)
 
+        # NOTE 添加计时器
+        self.timer = utils.QTimer()
+        self.timer_count = 0
+        self.tab_long_press = 0
+        self.timer.setInterval(100)
+        self.timer.timeout.connect(self.timerEvent)
 
-        self.resize(250,25)
+        self.resize(300,25)
         # Note 初始化 Application 的事件
         app = utils.QApplication.instance()
         app.installEventFilter(self)
@@ -245,7 +243,7 @@ class SearchEdit(utils.QLineEdit):
         self.parent = parent
         self.results = results
         self.selected = 0
-        self.options = 0
+        self.mode = 0
         self.scrollY = 0
     # -----------------------------------------------------------------------
 
@@ -257,12 +255,11 @@ class SearchEdit(utils.QLineEdit):
 
     def keyPressEvent(self,event):
         key = event.key()
-        # print key
+        print key
         self.count = self.results.widget.layout.count() - 2
 
         self.scrollY = 0
         scroll = self.results.widget.scrollArea.verticalScrollBar()
-        self.options = 0
 
         # NOTE 还原样式
         if self.selected != 0:
@@ -288,6 +285,7 @@ class SearchEdit(utils.QLineEdit):
             else:
                 scroll.setValue(0)
 
+            self.setCommandStyle(item,self.mode)
             print item.info.get("name")
 
         # NOTE 按下箭头
@@ -305,26 +303,42 @@ class SearchEdit(utils.QLineEdit):
             else:
                 scroll.setValue(0)
 
+            self.setCommandStyle(item,self.mode)
             print item.info.get("name")
 
         # NOTE 点击 Enter 键
         elif key == 16777220 and self.selected != 0:
-            item.exec_()
-            self.parent.hide()
+            if self.mode == 0:
+                item.exec_()
+                self.parent.hide()
+
+            elif self.mode == 1:
+                item.execOption_()
+                self.parent.hide()
+            elif self.mode == -1:
+                if item.info["pin"]:
+                    item.setUnpin()
+                else:
+                    item.setPin()
+                self.setCommandStyle(item,self.mode)
             
         # NOTE 按左箭头
-        elif key == 16777221 and self.selected != 0:
-            self.options -= 1
-            self.options = -1 if self.options < -1 else self.options
-            
+        elif key == 16777234 and self.selected != 0:
+            self.mode -= 1
+            self.mode = -1 if self.mode < -1 else self.mode
+
+            print "left",self.mode,item.info.get("name")
+            self.setCommandStyle(item,self.mode)
 
         # NOTE 按右箭头
         elif key == 16777236 and self.selected != 0:
-            self.options += 1
-            self.options = 1 if self.options > 1 else self.options
-            if self.options == 1 and not item.commandOption:
-                self.options = 0
+            self.mode += 1
+            self.mode = 1 if self.mode > 1 else self.mode
+            if self.mode == 1 and not item.commandOption:
+                self.mode = 0
             
+            print "right",self.mode,item.info.get("name")
+            self.setCommandStyle(item,self.mode)
 
         else:
             return super(SearchEdit,self).keyPressEvent(event)
@@ -350,8 +364,8 @@ class SearchEdit(utils.QLineEdit):
             height += item.height()
         return height - 100
 
-    def setCommandStyle(self,item,mode=0):
-        style = "QPushButton:hover{ \
+    def setCommandStyle(self,item,mode=2):
+        style = "QPushButton{ \
                 border: 1px solid orange; \
                 border-radius: 3px; \
                 background-color: orange; \
@@ -363,10 +377,10 @@ class SearchEdit(utils.QLineEdit):
             }"
 
         if mode == 0:
-            item.setStyleSheet("")
-            item.pin.setStyleSheet(style)
+            item.setStyleSheet("color:coral")
+            item.pin.setStyleSheet(hover)
             if item.commandOption:
-                item.option.setStyleSheet(style)
+                item.option.setStyleSheet(hover)
         elif mode == -1:
             item.setStyleSheet("")
             item.pin.setStyleSheet(style)
@@ -375,4 +389,14 @@ class SearchEdit(utils.QLineEdit):
         elif mode == 1:
             item.setStyleSheet("")
             item.pin.setStyleSheet(hover)
-            item.option.setStyleSheet(style)
+            if item.commandOption:
+                item.option.setStyleSheet(style)
+            else:
+                # NOTE 说明当前item没有选项，自动跳转到中间
+                self.mode -= 1
+                self.setCommandStyle(item,self.mode)
+        else:
+            item.setStyleSheet("")
+            item.pin.setStyleSheet(hover)
+            if item.commandOption:
+                item.option.setStyleSheet(hover)
