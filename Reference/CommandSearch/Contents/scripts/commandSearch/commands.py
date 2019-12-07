@@ -1,3 +1,10 @@
+# coding:utf-8
+
+__author__ =  'timmyliang'
+__email__ =  '820472580@qq.com'
+__date__ = '2019-12-07 14:33:16'
+
+
 import re
 from maya import cmds
 
@@ -14,6 +21,18 @@ def get():
     if not "COMMANDS" in globals().keys():
         return {} 
     return globals().get("COMMANDS")
+
+def getMenuList():
+    """
+    Get all registered commands from the global variable, if the global 
+    variable cannot be found an empty dictionary will be returned.
+    
+    :return: Commands data
+    :rtype: dict
+    """
+    if not "MENU_LIST" in globals().keys():
+        return {}
+    return globals().get("MENU_LIST")
     
 # ----------------------------------------------------------------------------
 
@@ -27,14 +46,16 @@ def filter(search):
     """
     matches = []
     regexes = []
-    
+
     # generate regex
     if search:
+        # NOTE split 实现空格关键词切分
         for p in search.split():
+
             regexes.append(
                 re.compile(
                     r'.*' + 
-                    re.sub( r'\W', '.*', p.strip() ) + 
+                    p + 
                     r'.*'
                 )    
             )
@@ -72,14 +93,17 @@ def store():
     # reset commands
     global COMMANDS
     COMMANDS = {}
-    
+    global MENU_LIST
+    MENU_LIST = []
+
     # loop menu bar
     menuBar = utils.mayaMenu()
-    _store(menuBar)
+    MENU_LIST = _store(menuBar)
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
-
-def _store(parent, parents=[],menu=None):
+    return MENU_LIST
+    
+def _store(parent, parents=[], menu_list=[]):
     """
     Process the parent to see if any if its children meet the search 
     command requirements. If so, the button and commands will be added 
@@ -92,7 +116,7 @@ def _store(parent, parents=[],menu=None):
     for i, item in enumerate(children):
         # tree
         tree = parents[:]
-    
+        
         # get items
         name = item.objectName().encode("utf-8")
         
@@ -105,7 +129,7 @@ def _store(parent, parents=[],menu=None):
             tree.append(
                 getMenu(item)
             )
-            menu = item
+            menu_list.append(item)
         # process item
         elif type(item) == utils.QWidgetAction:  
             # get dynamic p
@@ -113,7 +137,7 @@ def _store(parent, parents=[],menu=None):
             
             if not "isOptionBox" in dynamic:
                 # main item
-                getItem(item, name, tree , menu)
+                getItem(item, name, tree , menu_list)
             else:
                 # option box item
                 getItemOptionBox(item, parent)
@@ -122,8 +146,9 @@ def _store(parent, parents=[],menu=None):
         parent = name   
         
         # process next
-        _store(item, tree , menu)
-        
+        _store(item, tree , menu_list)
+    
+    return menu_list
 # ----------------------------------------------------------------------------  
           
 def getMenu(menu):
@@ -140,7 +165,7 @@ def getMenu(menu):
     
 # ----------------------------------------------------------------------------
     
-def getItem(item, name, parents , menu):
+def getItem(item, name, parents , menu_list):
     """
     Get data from item and store it into COMMANDS variable.
     
@@ -169,7 +194,7 @@ def getItem(item, name, parents , menu):
     COMMANDS[name]["group"] = parents[0]
     COMMANDS[name]["search"] = "".join([p.lower() for p in parents]) 
     COMMANDS[name]["hierarchy"] = " > ".join(parents)
-    COMMANDS[name]["menu"] = menu
+    COMMANDS[name]["menu"] = menu_list[-1]
       
 def getItemOptionBox(item, name):
     """

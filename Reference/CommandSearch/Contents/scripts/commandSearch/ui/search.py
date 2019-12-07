@@ -11,6 +11,7 @@ from maya import cmds
 
 BAR_CLOSE_ICON = ":/closeBar.png"
 BAR_OPEN_ICON = ":/openBar.png"
+WIDTH = 320
 
 # ---------------------------------------------------------------------------
     
@@ -32,8 +33,10 @@ class SearchWidget(utils.QWidget):
         
         # NOTE get commands
         if not commands.get():
-            commands.store()
-
+            self.menu_list = commands.store()
+        else:
+            self.menu_list = commands.getMenuList()
+        
         # NOTE variable
         self.setObjectName("CMDSearch")
         
@@ -44,7 +47,7 @@ class SearchWidget(utils.QWidget):
         
         # NOTE create container
         self.container = utils.QWidget(self)
-        self.container.setFixedWidth(300)
+        self.container.setFixedWidth(WIDTH)
         
         # NOTE add widgets
         layout.addWidget(self.container)
@@ -91,7 +94,7 @@ class SearchWidget(utils.QWidget):
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.timerEvent)
 
-        self.resize(300,25)
+        self.resize(WIDTH,25)
         # Note 初始化 Application 的事件
         app = utils.QApplication.instance()
         app.installEventFilter(self)
@@ -169,6 +172,7 @@ class SearchWidget(utils.QWidget):
         """
         self.search.selected = 0
         self.process(4)
+        self.search.showShortcut()
  
     def enter(self):  
         """
@@ -177,6 +181,7 @@ class SearchWidget(utils.QWidget):
         something with less than 4 char
         """
         self.process(0)
+        self.search.showShortcut()
         
     # ------------------------------------------------------------------------
     
@@ -187,8 +192,8 @@ class SearchWidget(utils.QWidget):
         
         :param int num: Search character number at least before process
         """
-        # filter search
-        search = str(self.search.text())
+        # NOTE filter search 支持中文搜索
+        search = self.search.text().encode("utf-8")
         if len(search) < num:      
             search = None
           
@@ -245,6 +250,8 @@ class SearchEdit(utils.QLineEdit):
         self.selected = 0
         self.mode = 0
         self.scrollY = 0
+        self.shortcut = {}
+
     # -----------------------------------------------------------------------
 
     def mouseReleaseEvent(self, e): 
@@ -255,6 +262,7 @@ class SearchEdit(utils.QLineEdit):
 
     def keyPressEvent(self,event):
         key = event.key()
+        KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         print key
         self.count = self.results.widget.layout.count() - 2
 
@@ -286,6 +294,7 @@ class SearchEdit(utils.QLineEdit):
                 scroll.setValue(0)
 
             self.setCommandStyle(item,self.mode)
+            self.showShortcut()
             print item.info.get("name")
 
         # NOTE 按下箭头
@@ -304,6 +313,7 @@ class SearchEdit(utils.QLineEdit):
                 scroll.setValue(0)
 
             self.setCommandStyle(item,self.mode)
+            self.showShortcut()
             print item.info.get("name")
 
         # NOTE 按左箭头
@@ -342,23 +352,98 @@ class SearchEdit(utils.QLineEdit):
             
         # NOTE 点击 ` 键 打开菜单
         elif key == 96 and self.selected != 0:
-            menu = item.info["menu"]
-            h = 0
-            
-            for child in menu.children():
-                if type(child) == utils.QWidgetAction:
-                    h += 1
-                    if child.text() == item.info["name"]:
-                        break
+            print item
+            # menu = item.info["menu"]
+     
+            # for child in menu.children():
+            #     if type(child) == utils.QWidgetAction:
+            #         if item.info["name"] in child.text():
+            #             # # print dir(child)
+            #             # label = utils.QLabel("TEST")
+            #             # # label.setText(child.text())
+            #             # label.setStyleSheet("background-color : red")
+            #             # child.setDefaultWidget(label)
+            #             break
                 
-            h = h/2*20
-            pos = utils.QCursor.pos()
-            menu.showTearOffMenu(utils.QPoint(pos.x()-50,pos.y()-h))
-            child.hover()
-            self.parent.hide()
-            self.parent.results.hide()
+            # # pos = utils.QCursor.pos()
+            # # pos = utils.QPoint(pos.x()-50,pos.y()-h)
+            # menu.showTearOffMenu()
+
+            # self.parent.hide()
+            # self.parent.results.hide()
+        
+        elif KeySequence == utils.QKeySequence("Ctrl+1"):
+            self.triggerShortcut(1)
+        elif KeySequence == utils.QKeySequence("Ctrl+2"):
+            self.triggerShortcut(2)
+        elif KeySequence == utils.QKeySequence("Ctrl+3"):
+            self.triggerShortcut(3)
+        elif KeySequence == utils.QKeySequence("Ctrl+4"):
+            self.triggerShortcut(4)
+        elif KeySequence == utils.QKeySequence("Ctrl+5"):
+            self.triggerShortcut(5)
+        elif KeySequence == utils.QKeySequence("Ctrl+6"):
+            self.triggerShortcut(6)
+        elif KeySequence == utils.QKeySequence("Ctrl+7"):
+            self.triggerShortcut(7)
+        elif KeySequence == utils.QKeySequence("Ctrl+8"):
+            self.triggerShortcut(8)
+        elif KeySequence == utils.QKeySequence("Ctrl+9"):
+            self.triggerShortcut(9)
+
         else:
             return super(SearchEdit,self).keyPressEvent(event)
+
+    def triggerShortcut(self,num):
+        if self.shortcut.has_key(num):
+            try:
+                self.shortcut[num].exec_()
+                self.parent.hide()
+            except:
+                pass
+
+    def showShortcut(self):
+        scroll = self.results.widget.scrollArea.verticalScrollBar()
+        print "shortcut"
+        # NOTE 显示快速快捷输入数字键
+        if self.selected > 6 and scroll.isVisible():
+            self.clearItemShortcut()
+            self.showItemShortcut(self.selected - 6)
+        else:
+
+            self.clearItemShortcut()
+            self.showItemShortcut()
+            
+    def showItemShortcut(self,start=0,num=8):
+        self.shortcut = {}
+        layout = self.results.widget.layout
+        display = 0
+        index = start
+        while display < num:
+            index += 1
+            item = layout.itemAt(index)
+            # NOTE 说明当前数量小于快捷键数量
+            if item == None:break
+                
+            item = item.widget()
+            if not item or type(item) == utils.Divider:
+                continue
+            display += 1
+
+            item.shortcut.setText("ctrl + %s"%(display))
+            self.shortcut[display] = item
+                
+    def clearItemShortcut(self):
+        u"""
+        clearItemShortcut 清理热键显示
+        """
+        layout = self.results.widget.layout
+        for count in range(layout.count()):
+            item = layout.itemAt(count).widget()
+            if not item or type(item) == utils.Divider:
+                continue
+            if item.shortcut.text():
+                item.shortcut.setText("")
 
     def currentItem(self,dn=True):
         layout = self.results.widget.layout

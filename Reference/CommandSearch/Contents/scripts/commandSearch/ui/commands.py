@@ -34,6 +34,8 @@ class Commands(utils.QWidget):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setHorizontalScrollBarPolicy(utils.Qt.ScrollBarAlwaysOff)
         
+        # self.scrollArea.setVerticalScrollBarPolicy(utils                                                         .Qt.ScrollBarAlwaysOff)
+        
         
         # create main widget widget
         self.widget = utils.QWidget()
@@ -55,14 +57,23 @@ class Commands(utils.QWidget):
         )
         self.layout.addItem(spacer)
         
-        # NOTE 注册事件 阻止键盘事件 https://forum.qt.io/topic/58787/disabling-right-and-left-arrow-shortcuts-for-the-scrollbar/11
-        self.scrollArea.verticalScrollBar().installEventFilter(self)
-        self.setFixedHeight(300)
+        # NOTE 注册事件 阻止滚动条键盘事件 https://forum.qt.io/topic/58787/disabling-right-and-left-arrow-shortcuts-for-the-scrollbar/11
+        self.scrollArea.installEventFilter(self)
+        self.setMinimumHeight(300)
 
     # ------------------------------------------------------------------------
     
     def eventFilter(self,receiver,event):
-        if receiver == self.scrollArea.verticalScrollBar() and event.type() == utils.QEvent.KeyPress:
+        if receiver == self.scrollArea and event.type() == utils.QEvent.KeyPress:
+            # NOTE 搜索执行输入的键盘事件
+            try:
+                self.parent.parent.search.keyPressEvent(event)
+            except:
+                # NOTE 如果报错则不阻止事件
+                return False
+            else:
+                return True
+        else:
             return False
 
     def clear(self):
@@ -161,6 +172,11 @@ class Button(utils.QWidget):
         self.main.setFlat(True)
         self.main.setToolTip(info.get("hierarchy"))
         self.main.released.connect(self.exec_)
+        
+        # NOTE 添加快捷键显示
+        self.shortcut = utils.QLabel(self)
+        self.shortcut.setFixedHeight(20)
+        self.shortcut.setStyleSheet("color:yellow")
 
         # create layout
         layout = utils.QHBoxLayout(self)
@@ -171,6 +187,14 @@ class Button(utils.QWidget):
         layout.addWidget(self.pin)
         layout.addWidget(icon)
         layout.addWidget(self.main)
+        spacer = utils.QSpacerItem(
+            1, 
+            1, 
+            utils.QSizePolicy.Expanding,
+            utils.QSizePolicy.Expanding
+        )
+        layout.addItem(spacer)
+        layout.addWidget(self.shortcut)
         
         # create option box
         if self.commandOption:
@@ -180,6 +204,9 @@ class Button(utils.QWidget):
             self.option.pressed.connect(self.execOption_)
             self.setAsIcon(self.option)
             layout.addWidget(self.option)
+        else:
+            layout.setContentsMargins(0,0,20,0)
+
             
         # set pin
         if info.get("pin"):         self.setPin()

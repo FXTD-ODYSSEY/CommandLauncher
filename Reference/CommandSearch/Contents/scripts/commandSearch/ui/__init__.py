@@ -43,4 +43,4 @@ def install():
 def setup():
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
     COMMAND_LAUNCHER.setVisible(False)
-
+    return COMMAND_LAUNCHER
