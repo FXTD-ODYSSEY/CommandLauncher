@@ -1,6 +1,7 @@
 # coding:utf-8
 from . import utils
-    
+from maya import mel
+
 # ----------------------------------------------------------------------------
     
 PIN_ICON = ":/nodeGrapherPinnedLarge.png"
@@ -246,11 +247,16 @@ class Button(utils.QWidget):
             return
             
         self.command.trigger()
-        self.window().setVisible(False)
+        self.window().hide()
+        self.window().parent.hide()
+        mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")
+
    
     def execOption_(self):
         if not self.commandOption:
             return
             
         self.commandOption.trigger()
-        self.window().setVisible(False)
+        self.window().hide()
+        self.window().parent.hide()
+        mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")

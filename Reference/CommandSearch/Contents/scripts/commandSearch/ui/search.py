@@ -6,7 +6,7 @@ __date__ = '2019-12-05 14:27:16'
 
 from . import manager, results, utils
 from .. import commands
-from maya import cmds
+from maya import mel
 # ---------------------------------------------------------------------------
 
 BAR_CLOSE_ICON = ":/closeBar.png"
@@ -136,7 +136,7 @@ class SearchWidget(utils.QWidget):
             elif event.key() == 16777216:
                 self.hide()
                 self.results.hide()
-                cmds.selectPref(ps=0)
+                mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")
                 self.tab_long_press = 0
             else:
                 self.tab_long_press = 0
@@ -155,7 +155,6 @@ class SearchWidget(utils.QWidget):
                 type(receiver.parent()) != utils.Divider
             ):
                 self.hide()
-                cmds.selectPref(ps=0)
 
             self.tab_long_press = 0
 
