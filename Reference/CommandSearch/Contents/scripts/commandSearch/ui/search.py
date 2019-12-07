@@ -306,6 +306,24 @@ class SearchEdit(utils.QLineEdit):
             self.setCommandStyle(item,self.mode)
             print item.info.get("name")
 
+        # NOTE 按左箭头
+        elif key == 16777234 and self.selected != 0:
+            self.mode -= 1
+            self.mode = -1 if self.mode < -1 else self.mode
+
+            self.setCommandStyle(item,self.mode)
+            print "left",self.mode,item.info.get("name")
+
+        # NOTE 按右箭头
+        elif key == 16777236 and self.selected != 0:
+            self.mode += 1
+            self.mode = 1 if self.mode > 1 else self.mode
+            if self.mode == 1 and not item.commandOption:
+                self.mode = 0
+            
+            self.setCommandStyle(item,self.mode)
+            print "right",self.mode,item.info.get("name")
+
         # NOTE 点击 Enter 键
         elif key == 16777220 and self.selected != 0:
             if self.mode == 0:
@@ -322,24 +340,23 @@ class SearchEdit(utils.QLineEdit):
                     item.setPin()
                 self.setCommandStyle(item,self.mode)
             
-        # NOTE 按左箭头
-        elif key == 16777234 and self.selected != 0:
-            self.mode -= 1
-            self.mode = -1 if self.mode < -1 else self.mode
-
-            print "left",self.mode,item.info.get("name")
-            self.setCommandStyle(item,self.mode)
-
-        # NOTE 按右箭头
-        elif key == 16777236 and self.selected != 0:
-            self.mode += 1
-            self.mode = 1 if self.mode > 1 else self.mode
-            if self.mode == 1 and not item.commandOption:
-                self.mode = 0
+        # NOTE 点击 ` 键 打开菜单
+        elif key == 96 and self.selected != 0:
+            menu = item.info["menu"]
+            h = 0
             
-            print "right",self.mode,item.info.get("name")
-            self.setCommandStyle(item,self.mode)
-
+            for child in menu.children():
+                if type(child) == utils.QWidgetAction:
+                    h += 1
+                    if child.text() == item.info["name"]:
+                        break
+                
+            h = h/2*20
+            pos = utils.QCursor.pos()
+            menu.showTearOffMenu(utils.QPoint(pos.x()-50,pos.y()-h))
+            child.hover()
+            self.parent.hide()
+            self.parent.results.hide()
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 

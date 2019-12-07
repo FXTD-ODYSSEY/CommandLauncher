@@ -40,7 +40,7 @@ class ResultsMenu(utils.QMenu):
     # ------------------------------------------------------------------------
     
     def keyPressEvent(self, e):
-        self.parent.search.keyPressEvent(e)
+        return self.parent.search.keyPressEvent(e)
     
     def mouseReleaseEvent( self, e ):
         # process click
@@ -129,7 +129,7 @@ class ResultsWindow(utils.QDockWidget):
     # ------------------------------------------------------------------------
     
     def keyPressEvent(self, e):
-        self.parent.search.keyPressEvent(e)
+        return self.parent.search.keyPressEvent(e)
         
     def closeEvent(self, e):
         self.aboutToClose.emit()

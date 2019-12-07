@@ -79,7 +79,7 @@ def store():
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
 
-def _store(parent, parents=[]):
+def _store(parent, parents=[],menu=None):
     """
     Process the parent to see if any if its children meet the search 
     command requirements. If so, the button and commands will be added 
@@ -105,7 +105,7 @@ def _store(parent, parents=[]):
             tree.append(
                 getMenu(item)
             )
-            
+            menu = item
         # process item
         elif type(item) == utils.QWidgetAction:  
             # get dynamic p
@@ -113,7 +113,7 @@ def _store(parent, parents=[]):
             
             if not "isOptionBox" in dynamic:
                 # main item
-                getItem(item, name, tree)
+                getItem(item, name, tree , menu)
             else:
                 # option box item
                 getItemOptionBox(item, parent)
@@ -122,7 +122,7 @@ def _store(parent, parents=[]):
         parent = name   
         
         # process next
-        _store(item, tree)
+        _store(item, tree , menu)
         
 # ----------------------------------------------------------------------------  
           
@@ -140,7 +140,7 @@ def getMenu(menu):
     
 # ----------------------------------------------------------------------------
     
-def getItem(item, name, parents):
+def getItem(item, name, parents , menu):
     """
     Get data from item and store it into COMMANDS variable.
     
@@ -169,6 +169,7 @@ def getItem(item, name, parents):
     COMMANDS[name]["group"] = parents[0]
     COMMANDS[name]["search"] = "".join([p.lower() for p in parents]) 
     COMMANDS[name]["hierarchy"] = " > ".join(parents)
+    COMMANDS[name]["menu"] = menu
       
 def getItemOptionBox(item, name):
     """
