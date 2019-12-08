@@ -1,6 +1,7 @@
 # coding:utf-8
 from . import utils
 from maya import mel
+from maya import cmds
 
 # ----------------------------------------------------------------------------
     
@@ -246,17 +247,18 @@ class Button(utils.QWidget):
         if not self.command:
             return
             
-        self.command.trigger()
         window = self.window()
         window.hide()
         window.parent.hide()
-
+        cmds.selectPref(ps=0,psf=0)
+        self.command.trigger()
    
     def execOption_(self):
         if not self.commandOption:
             return
             
-        self.commandOption.trigger()
         window = self.window()
         window.hide()
         window.parent.hide()
+        cmds.selectPref(ps=0,psf=0)
+        self.commandOption.trigger()

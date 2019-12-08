@@ -7,6 +7,7 @@ __date__ = '2019-12-05 14:27:16'
 from . import manager, results, utils
 from .. import commands
 from maya import mel
+from maya import cmds
 # ---------------------------------------------------------------------------
 
 BAR_CLOSE_ICON = ":/closeBar.png"
@@ -99,6 +100,7 @@ class SearchWidget(utils.QWidget):
         app = utils.QApplication.instance()
         app.installEventFilter(self)
 
+        
     # ------------------------------------------------------------------------
 
     def timerEvent(self):
@@ -110,33 +112,48 @@ class SearchWidget(utils.QWidget):
         停止计时器并且触发单击事件
         '''
         self.timer.stop()
+        # print "tab_long_press",self.tab_long_press
+        # print "timer_count",self.timer_count
         if self.timer_count < 1:
             # NOTE 如果小于等于 3 说明不是长按
             if self.tab_long_press <=3:
                 self.show()
+
             self.tab_long_press = 0
         else:
-            self.hide()
-            self.results.hide()
+            if self.tab_long_press == 0:
+                cmds.selectPref(psf=0,ps=0)
+            if self.isVisible():
+                self.hide()
+                self.results.hide()
+
             
         self.timer_count = 0
 
     def eventFilter(self,receiver,event):
         # NOTE 键盘事件
-        if hasattr(event,"type") and event.type() == utils.QEvent.KeyPress:
+        if hasattr(event,"type") and event.type() == utils.QEvent.KeyRelease:
             # NOTE 敲击 Tab 键
             if event.key() == 16777217:
+                
                 self.tab_long_press += 1
+                if not event.isAutoRepeat():
+                    mel.eval("dR_paintPress;")
+                    self.tab_long_press = 0
+
                 if self.timer.isActive():
                     self.timer_count += 1
                 else:
                     self.timer.start()
+                    
 
             # NOTE 敲击 Esc 键
             elif event.key() == 16777216:
                 self.hide()
                 self.results.hide()
-                mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")
+                # mel.eval("dR_paintRelease;")
+                # cmds.setToolTo(self.curr_ctx)
+                cmds.selectPref(psf=0,ps=0)
                 self.tab_long_press = 0
             else:
                 self.tab_long_press = 0
@@ -155,6 +172,9 @@ class SearchWidget(utils.QWidget):
                 type(receiver.parent()) != utils.Divider
             ):
                 self.hide()
+                # mel.eval("dR_paintRelease;")
+                # cmds.setToolTo(self.curr_ctx)
+                cmds.selectPref(psf=0,ps=0)
 
             self.tab_long_press = 0
 
@@ -403,17 +423,16 @@ class SearchEdit(utils.QLineEdit):
 
     def showShortcut(self):
         scroll = self.results.widget.scrollArea.verticalScrollBar()
-        print "shortcut"
+        print "shortcut",self.selected
         # NOTE 显示快速快捷输入数字键
         if self.selected > 6 and scroll.isVisible():
-            self.clearItemShortcut()
             self.showItemShortcut(self.selected - 6)
         else:
-
-            self.clearItemShortcut()
             self.showItemShortcut()
             
     def showItemShortcut(self,start=0,num=8):
+        print "show",start
+        self.clearItemShortcut()
         self.shortcut = {}
         layout = self.results.widget.layout
         display = 0
@@ -425,11 +444,13 @@ class SearchEdit(utils.QLineEdit):
             if item == None:break
                 
             item = item.widget()
+            print "item",item
             if not item or type(item) == utils.Divider:
                 continue
             display += 1
 
-            item.shortcut.setText("ctrl + %s"%(display))
+            shortcut = "ctrl + %s"%(display)
+            item.shortcut.setText(shortcut)
             self.shortcut[display] = item
                 
     def clearItemShortcut(self):
