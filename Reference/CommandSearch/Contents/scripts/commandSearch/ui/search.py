@@ -272,6 +272,7 @@ class SearchEdit(utils.QLineEdit):
         self.mode = 0
         self.shortcut = {}
         self.scroll = 5
+        self.shortcut_num = 6
 
     # -----------------------------------------------------------------------
 
@@ -297,7 +298,7 @@ class SearchEdit(utils.QLineEdit):
             self.setCommandStyle(item)
         
         # NOTE 按上箭头
-        if key == 16777235:
+        if key == utils.Qt.Key_Up:
             self.selected -= 1
             if self.selected <= 0:
                 self.selected = 0
@@ -320,7 +321,7 @@ class SearchEdit(utils.QLineEdit):
             print item.info.get("name")
 
         # NOTE 按下箭头
-        elif key == 16777237:
+        elif key == utils.Qt.Key_Down:
             self.selected += 1
             self.selected = self.selected % self.count
 
@@ -343,7 +344,7 @@ class SearchEdit(utils.QLineEdit):
             print item.info.get("name")
 
         # NOTE 按左箭头
-        elif key == 16777234 and self.selected != 0:
+        elif key == utils.Qt.Key_Left and self.selected != 0:
             self.mode -= 1
             self.mode = -1 if self.mode < -1 else self.mode
 
@@ -351,7 +352,7 @@ class SearchEdit(utils.QLineEdit):
             print "left",self.mode,item.info.get("name")
 
         # NOTE 按右箭头
-        elif key == 16777236 and self.selected != 0:
+        elif key == utils.Qt.Key_Right and self.selected != 0:
             self.mode += 1
             self.mode = 1 if self.mode > 1 else self.mode
             if self.mode == 1 and not item.commandOption:
@@ -361,7 +362,7 @@ class SearchEdit(utils.QLineEdit):
             print "right",self.mode,item.info.get("name")
 
         # NOTE 点击 Enter 键
-        elif key == 16777220 and self.selected != 0:
+        elif key == utils.Qt.Key_Enter and self.selected != 0:
             if self.mode == 0:
                 item.exec_()
                 self.parent.hide()
@@ -377,7 +378,7 @@ class SearchEdit(utils.QLineEdit):
                 self.setCommandStyle(item,self.mode)
             
         # NOTE 点击 ` 键 打开菜单
-        elif key == 96 and self.selected != 0:
+        elif key == utils.Qt.Key_QuoteLeft and self.selected != 0:
             print item
             # menu = item.info["menu"]
      
@@ -416,10 +417,33 @@ class SearchEdit(utils.QLineEdit):
             self.triggerShortcut(8)
         elif KeySequence == utils.QKeySequence("Ctrl+9"):
             self.triggerShortcut(9)
+            
+        elif KeySequence == utils.QKeySequence("Shift+1"):
+            self.jumpToShortcut(1)
+        elif KeySequence == utils.QKeySequence("Shift+2"):
+            self.jumpToShortcut(2)
+        elif KeySequence == utils.QKeySequence("Shift+3"):
+            self.jumpToShortcut(3)
+        elif KeySequence == utils.QKeySequence("Shift+4"):
+            self.jumpToShortcut(4)
+        elif KeySequence == utils.QKeySequence("Shift+5"):
+            self.jumpToShortcut(5)
+        elif KeySequence == utils.QKeySequence("Shift+6"):
+            self.jumpToShortcut(6)
+        elif KeySequence == utils.QKeySequence("Shift+7"):
+            self.jumpToShortcut(7)
+        elif KeySequence == utils.QKeySequence("Shift+8"):
+            self.jumpToShortcut(8)
+        elif KeySequence == utils.QKeySequence("Shift+9"):
+            self.jumpToShortcut(9)
 
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 
+    def jumpToShortcut(self,num):
+        if self.shortcut.has_key(num):
+            pass
+    
     def triggerShortcut(self,num):
         if self.shortcut.has_key(num):
             try:
@@ -436,12 +460,12 @@ class SearchEdit(utils.QLineEdit):
         else:
             self.showItemShortcut()
             
-    def showItemShortcut(self,start=0,num=8):
+    def showItemShortcut(self,start=0):
         self.clearItemShortcut()
         layout = self.results.widget.layout
         display = 0
         index = start
-        while display < num:
+        while display < self.shortcut_num:
             index += 1
             item = layout.itemAt(index)
             # NOTE 说明当前数量小于快捷键数量
