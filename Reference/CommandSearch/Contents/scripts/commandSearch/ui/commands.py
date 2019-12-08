@@ -247,9 +247,9 @@ class Button(utils.QWidget):
             return
             
         self.command.trigger()
-        self.window().hide()
-        self.window().parent.hide()
-        mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")
+        window = self.window()
+        window.hide()
+        window.parent.hide()
 
    
     def execOption_(self):
@@ -257,6 +257,6 @@ class Button(utils.QWidget):
             return
             
         self.commandOption.trigger()
-        self.window().hide()
-        self.window().parent.hide()
-        mel.eval("selectPref -paintSelectRefine 0 -paintSelect 0;")
+        window = self.window()
+        window.hide()
+        window.parent.hide()
