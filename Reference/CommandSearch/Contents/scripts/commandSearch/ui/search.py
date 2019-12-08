@@ -134,7 +134,7 @@ class SearchWidget(utils.QWidget):
         # NOTE 键盘事件
         if hasattr(event,"type") and event.type() == utils.QEvent.KeyRelease:
             # NOTE 敲击 Tab 键
-            if event.key() == 16777217:
+            if event.key() == utils.Qt.Key_Tab:
                 
                 self.tab_long_press += 1
                 if not event.isAutoRepeat():
@@ -148,7 +148,7 @@ class SearchWidget(utils.QWidget):
                     
 
             # NOTE 敲击 Esc 键
-            elif event.key() == 16777216:
+            elif event.key() == utils.Qt.Key_Escape:
                 self.hide()
                 self.results.hide()
                 # mel.eval("dR_paintRelease;")
@@ -268,11 +268,17 @@ class SearchEdit(utils.QLineEdit):
         utils.QLineEdit.__init__(self, widgetParent)
         self.parent = parent
         self.results = results
+        
         self.selected = 0
         self.mode = 0
+        
         self.shortcut = {}
-        self.scroll = 5
-        self.shortcut_num = 6
+        self.scroll_start = 3
+        self.scroll_locked = 4
+        self.shortcut_num = 8
+        
+        app = utils.QApplication.instance()
+        app.installEventFilter(self)
 
     # -----------------------------------------------------------------------
 
@@ -282,6 +288,29 @@ class SearchEdit(utils.QLineEdit):
                 self.parent.typing()
         return super(SearchEdit,self).mouseReleaseEvent(e)
 
+    # def keyReleaseEvent(self,event):
+    #     key = event.key()
+    #     print "release",key
+    #     if key == utils.Qt.Key_Alt:
+    #         for _,[item,_] in self.shortcut.items():
+    #             shortcut = item.shortcut.text()
+    #             shortcut = shortcut.replace("alt","ctrl")
+    #             item.shortcut.setText(shortcut)
+                
+    #     return super(SearchEdit, self).keyReleaseEvent(event)
+    
+    # def eventFilter(self,receiver,event):
+    #     # NOTE 键盘事件
+    #     # modifier = utils.QApplication.keyboardModifiers()
+    #     # print modifier == utils.Qt.AltModifier
+    #     if hasattr(event,"type") and event.type() == utils.QEvent.KeyPress:
+    #         # NOTE 敲击 Tab 键
+    #         print "eventFilter ",event.key()
+    #         # if event.key() == utils.Qt.Key_Tab:
+    #         #     pass
+        
+    #     return False
+    
     def keyPressEvent(self,event):
         
         self.count = self.results.widget.layout.count() - 1
@@ -289,11 +318,19 @@ class SearchEdit(utils.QLineEdit):
             return super(SearchEdit,self).keyPressEvent(event)
         
         key = event.key()
+        print "key",key
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         scroll = self.results.widget.scrollArea.verticalScrollBar()
         
+        if key == utils.Qt.Key_Alt:
+            for _,[item,_] in self.shortcut.items():
+                print item
+                shortcut = item.shortcut.text()
+                shortcut = shortcut.replace("ctrl","alt")
+                item.shortcut.setText(shortcut)
+            # self.keyReleaseEvent(event)
         # NOTE 还原样式
-        if self.selected != 0:
+        elif self.selected != 0:
             item = self.currentItem()
             self.setCommandStyle(item)
         
@@ -310,7 +347,7 @@ class SearchEdit(utils.QLineEdit):
             item.setStyleSheet("color:coral")
 
             # NOTE 设置滚动值
-            if self.selected > self.scroll:
+            if self.selected > self.scroll_start:
                 height = self.scrollHeight()
                 scroll.setValue(height)
             else:
@@ -325,15 +362,10 @@ class SearchEdit(utils.QLineEdit):
             self.selected += 1
             self.selected = self.selected % self.count
 
-            print self.selected
-            layout = self.results.widget.layout
-            print "count",layout.count()
-
             item = self.currentItem(False)
-            item.setStyleSheet("color:coral")
 
             # NOTE 设置滚动值
-            if self.selected > self.scroll:
+            if self.selected > self.scroll_start:
                 height = self.scrollHeight()
                 scroll.setValue(height)
             else:
@@ -379,7 +411,9 @@ class SearchEdit(utils.QLineEdit):
             
         # NOTE 点击 ` 键 打开菜单
         elif key == utils.Qt.Key_QuoteLeft and self.selected != 0:
-            print item
+            print utils.QKeySequence("Ctrl+1")
+            print utils.QKeySequence("Shift+1")
+            print utils.QKeySequence("Ctrl+Shift+1")
             # menu = item.info["menu"]
      
             # for child in menu.children():
@@ -399,6 +433,7 @@ class SearchEdit(utils.QLineEdit):
             # self.parent.hide()
             # self.parent.results.hide()
         
+        # NOTE 设置 Ctrl 快捷键
         elif KeySequence == utils.QKeySequence("Ctrl+1"):
             self.triggerShortcut(1)
         elif KeySequence == utils.QKeySequence("Ctrl+2"):
@@ -418,23 +453,24 @@ class SearchEdit(utils.QLineEdit):
         elif KeySequence == utils.QKeySequence("Ctrl+9"):
             self.triggerShortcut(9)
             
-        elif KeySequence == utils.QKeySequence("Shift+1"):
+        # NOTE 设置 Alt 快捷键
+        elif KeySequence == utils.QKeySequence("alt+1"):
             self.jumpToShortcut(1)
-        elif KeySequence == utils.QKeySequence("Shift+2"):
+        elif KeySequence == utils.QKeySequence("alt+2"):
             self.jumpToShortcut(2)
-        elif KeySequence == utils.QKeySequence("Shift+3"):
+        elif KeySequence == utils.QKeySequence("alt+3"):
             self.jumpToShortcut(3)
-        elif KeySequence == utils.QKeySequence("Shift+4"):
+        elif KeySequence == utils.QKeySequence("alt+4"):
             self.jumpToShortcut(4)
-        elif KeySequence == utils.QKeySequence("Shift+5"):
+        elif KeySequence == utils.QKeySequence("alt+5"):
             self.jumpToShortcut(5)
-        elif KeySequence == utils.QKeySequence("Shift+6"):
+        elif KeySequence == utils.QKeySequence("alt+6"):
             self.jumpToShortcut(6)
-        elif KeySequence == utils.QKeySequence("Shift+7"):
+        elif KeySequence == utils.QKeySequence("alt+7"):
             self.jumpToShortcut(7)
-        elif KeySequence == utils.QKeySequence("Shift+8"):
+        elif KeySequence == utils.QKeySequence("alt+8"):
             self.jumpToShortcut(8)
-        elif KeySequence == utils.QKeySequence("Shift+9"):
+        elif KeySequence == utils.QKeySequence("alt+9"):
             self.jumpToShortcut(9)
 
         else:
@@ -442,12 +478,25 @@ class SearchEdit(utils.QLineEdit):
 
     def jumpToShortcut(self,num):
         if self.shortcut.has_key(num):
-            pass
-    
+            item,index = self.shortcut[num]
+            self.selected = index
+            # scroll = self.results.widget.scrollArea.verticalScrollBar()
+            # # NOTE 设置滚动值
+            # if self.selected > self.scroll_start:
+            #     height = self.scrollHeight()
+            #     scroll.setValue(height)
+            # else:
+            #     scroll.setValue(0)
+
+            self.setCommandStyle(item,self.mode)
+            self.showShortcut()
+            
+            
     def triggerShortcut(self,num):
         if self.shortcut.has_key(num):
+            item,_ = self.shortcut[num]
             try:
-                self.shortcut[num].exec_()
+                item.exec_()
                 self.parent.hide()
             except:
                 pass
@@ -455,8 +504,8 @@ class SearchEdit(utils.QLineEdit):
     def showShortcut(self):
         scroll = self.results.widget.scrollArea.verticalScrollBar()
         # NOTE 显示快速快捷输入数字键
-        if self.selected > 6 and scroll.isVisible():
-            self.showItemShortcut(self.selected - 6)
+        if self.selected > self.scroll_locked and scroll.isVisible():
+            self.showItemShortcut(self.selected - self.scroll_locked)
         else:
             self.showItemShortcut()
             
@@ -476,9 +525,9 @@ class SearchEdit(utils.QLineEdit):
                 continue
             display += 1
 
-            shortcut = "ctrl + %s"%(display)
+            shortcut = "ctrl + %s" % (display)
             item.shortcut.setText(shortcut)
-            self.shortcut[display] = item
+            self.shortcut[display] = item,index
                 
     def clearItemShortcut(self):
         u"""
@@ -493,12 +542,12 @@ class SearchEdit(utils.QLineEdit):
             if item.shortcut.text():
                 item.shortcut.setText("")
 
-    def currentItem(self,dn=True):
+    def currentItem(self,up=True):
         layout = self.results.widget.layout
         item = layout.itemAt(self.selected).widget()
         if type(item) == utils.Divider:
 
-            if dn:
+            if up:
                 self.selected -= 1
             else:
                 self.selected += 1
@@ -512,7 +561,7 @@ class SearchEdit(utils.QLineEdit):
         for i in range(self.selected):
             item = layout.itemAt(i).widget()
             height += item.height()
-        return height - self.scroll*20
+        return height - self.scroll_start * 20
 
     def setCommandStyle(self,item,mode=2):
         style = "QPushButton{ \
