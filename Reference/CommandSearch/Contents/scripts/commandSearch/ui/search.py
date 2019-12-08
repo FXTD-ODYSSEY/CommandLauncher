@@ -189,9 +189,8 @@ class SearchWidget(utils.QWidget):
         when typing it will only start processing when there are at least
         4 characters typed.
         """
-        self.search.selected = 0
         self.process(4)
-        self.search.showShortcut()
+        
  
     def enter(self):  
         """
@@ -200,7 +199,6 @@ class SearchWidget(utils.QWidget):
         something with less than 4 char
         """
         self.process(0)
-        self.search.showShortcut()
         
     # ------------------------------------------------------------------------
     
@@ -229,6 +227,10 @@ class SearchWidget(utils.QWidget):
 
         # set focus
         self.search.setFocus()
+        
+        # self.search.selected = 0
+        self.search.showShortcut()
+        
 
     # ------------------------------------------------------------------------
     
@@ -268,8 +270,8 @@ class SearchEdit(utils.QLineEdit):
         self.results = results
         self.selected = 0
         self.mode = 0
-        self.scrollY = 0
         self.shortcut = {}
+        self.scroll = 5
 
     # -----------------------------------------------------------------------
 
@@ -280,14 +282,15 @@ class SearchEdit(utils.QLineEdit):
         return super(SearchEdit,self).mouseReleaseEvent(e)
 
     def keyPressEvent(self,event):
+        
+        self.count = self.results.widget.layout.count() - 1
+        if self.count < 1:
+            return super(SearchEdit,self).keyPressEvent(event)
+        
         key = event.key()
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
-        print key
-        self.count = self.results.widget.layout.count() - 2
-
-        self.scrollY = 0
         scroll = self.results.widget.scrollArea.verticalScrollBar()
-
+        
         # NOTE 还原样式
         if self.selected != 0:
             item = self.currentItem()
@@ -306,7 +309,7 @@ class SearchEdit(utils.QLineEdit):
             item.setStyleSheet("color:coral")
 
             # NOTE 设置滚动值
-            if self.selected > 5:
+            if self.selected > self.scroll:
                 height = self.scrollHeight()
                 scroll.setValue(height)
             else:
@@ -321,11 +324,15 @@ class SearchEdit(utils.QLineEdit):
             self.selected += 1
             self.selected = self.selected % self.count
 
+            print self.selected
+            layout = self.results.widget.layout
+            print "count",layout.count()
+
             item = self.currentItem(False)
             item.setStyleSheet("color:coral")
 
             # NOTE 设置滚动值
-            if self.selected > 5:
+            if self.selected > self.scroll:
                 height = self.scrollHeight()
                 scroll.setValue(height)
             else:
@@ -423,7 +430,6 @@ class SearchEdit(utils.QLineEdit):
 
     def showShortcut(self):
         scroll = self.results.widget.scrollArea.verticalScrollBar()
-        print "shortcut",self.selected
         # NOTE 显示快速快捷输入数字键
         if self.selected > 6 and scroll.isVisible():
             self.showItemShortcut(self.selected - 6)
@@ -431,9 +437,7 @@ class SearchEdit(utils.QLineEdit):
             self.showItemShortcut()
             
     def showItemShortcut(self,start=0,num=8):
-        print "show",start
         self.clearItemShortcut()
-        self.shortcut = {}
         layout = self.results.widget.layout
         display = 0
         index = start
@@ -444,7 +448,6 @@ class SearchEdit(utils.QLineEdit):
             if item == None:break
                 
             item = item.widget()
-            print "item",item
             if not item or type(item) == utils.Divider:
                 continue
             display += 1
@@ -457,6 +460,7 @@ class SearchEdit(utils.QLineEdit):
         u"""
         clearItemShortcut 清理热键显示
         """
+        self.shortcut = {}
         layout = self.results.widget.layout
         for count in range(layout.count()):
             item = layout.itemAt(count).widget()
@@ -484,7 +488,7 @@ class SearchEdit(utils.QLineEdit):
         for i in range(self.selected):
             item = layout.itemAt(i).widget()
             height += item.height()
-        return height - 100
+        return height - self.scroll*20
 
     def setCommandStyle(self,item,mode=2):
         style = "QPushButton{ \

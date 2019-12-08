@@ -81,7 +81,8 @@ class Commands(utils.QWidget):
     def clear(self):
         for i in reversed(range(self.layout.count()-1)):
             item = self.layout.itemAt(i)
-            item.widget().deleteLater()
+            # NOTE deleteLater 会导致元素保留 导致热键显示错乱
+            item.widget().setParent(None)
     
     def populate(self, matches):
         """
