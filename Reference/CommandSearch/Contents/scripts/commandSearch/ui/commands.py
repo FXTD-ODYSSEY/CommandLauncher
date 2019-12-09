@@ -36,8 +36,6 @@ class Commands(utils.QWidget):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setHorizontalScrollBarPolicy(utils.Qt.ScrollBarAlwaysOff)
         
-        # self.scrollArea.setVerticalScrollBarPolicy(utils                                                         .Qt.ScrollBarAlwaysOff)
-        
         
         # create main widget widget
         self.widget = utils.QWidget()

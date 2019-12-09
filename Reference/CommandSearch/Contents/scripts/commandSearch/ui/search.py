@@ -118,6 +118,8 @@ class SearchWidget(utils.QWidget):
             # NOTE 如果小于等于 3 说明不是长按
             if self.tab_long_press <=3:
                 self.show()
+                # NOTE 选择输入
+                self.search.selectAll()
 
             self.tab_long_press = 0
         else:
