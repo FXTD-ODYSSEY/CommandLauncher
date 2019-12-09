@@ -228,7 +228,9 @@ class SearchWidget(utils.QWidget):
         # set focus
         self.search.setFocus()
         
-        # self.search.selected = 0
+        self.search.selected = 0
+        scroll = self.results.widget.scrollArea.verticalScrollBar()
+        scroll.setValue(0)
         self.search.showShortcut()
         
 
@@ -276,9 +278,6 @@ class SearchEdit(utils.QLineEdit):
         self.scroll_start = 3
         self.scroll_locked = 4
         self.shortcut_num = 8
-        
-        app = utils.QApplication.instance()
-        app.installEventFilter(self)
 
     # -----------------------------------------------------------------------
 
@@ -287,29 +286,6 @@ class SearchEdit(utils.QLineEdit):
             if not self.parent.results.isVisible():
                 self.parent.typing()
         return super(SearchEdit,self).mouseReleaseEvent(e)
-
-    # def keyReleaseEvent(self,event):
-    #     key = event.key()
-    #     print "release",key
-    #     if key == utils.Qt.Key_Alt:
-    #         for _,[item,_] in self.shortcut.items():
-    #             shortcut = item.shortcut.text()
-    #             shortcut = shortcut.replace("alt","ctrl")
-    #             item.shortcut.setText(shortcut)
-                
-    #     return super(SearchEdit, self).keyReleaseEvent(event)
-    
-    # def eventFilter(self,receiver,event):
-    #     # NOTE 键盘事件
-    #     # modifier = utils.QApplication.keyboardModifiers()
-    #     # print modifier == utils.Qt.AltModifier
-    #     if hasattr(event,"type") and event.type() == utils.QEvent.KeyPress:
-    #         # NOTE 敲击 Tab 键
-    #         print "eventFilter ",event.key()
-    #         # if event.key() == utils.Qt.Key_Tab:
-    #         #     pass
-        
-    #     return False
     
     def keyPressEvent(self,event):
         
@@ -320,20 +296,24 @@ class SearchEdit(utils.QLineEdit):
         key = event.key()
         print "key",key
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
-        scroll = self.results.widget.scrollArea.verticalScrollBar()
+        # return super(SearchEdit,self).keyPressEvent(event)
         
-        if key == utils.Qt.Key_Alt:
+        if key == utils.Qt.Key_Control:
             for _,[item,_] in self.shortcut.items():
-                print item
+                shortcut = item.shortcut.text()
+                shortcut = shortcut.replace("alt","ctrl")
+                item.shortcut.setText(shortcut)
+        elif key == utils.Qt.Key_Alt:
+            for _,[item,_] in self.shortcut.items():
                 shortcut = item.shortcut.text()
                 shortcut = shortcut.replace("ctrl","alt")
                 item.shortcut.setText(shortcut)
-            # self.keyReleaseEvent(event)
         # NOTE 还原样式
         elif self.selected != 0:
             item = self.currentItem()
             self.setCommandStyle(item)
         
+        scroll = self.results.widget.scrollArea.verticalScrollBar()
         # NOTE 按上箭头
         if key == utils.Qt.Key_Up:
             self.selected -= 1
@@ -393,8 +373,9 @@ class SearchEdit(utils.QLineEdit):
             self.setCommandStyle(item,self.mode)
             print "right",self.mode,item.info.get("name")
 
-        # NOTE 点击 Enter 键
-        elif key == utils.Qt.Key_Enter and self.selected != 0:
+        # NOTE 点击 Enter 或 Return 键
+        elif (key == utils.Qt.Key_Enter or key == utils.Qt.Key_Return)and self.selected != 0 and self.results.isVisible():
+            # item = self.currentItem()
             if self.mode == 0:
                 item.exec_()
                 self.parent.hide()
@@ -525,7 +506,7 @@ class SearchEdit(utils.QLineEdit):
                 continue
             display += 1
 
-            shortcut = "ctrl + %s" % (display)
+            shortcut = "alt + %s" % (display)
             item.shortcut.setText(shortcut)
             self.shortcut[display] = item,index
                 

@@ -66,18 +66,17 @@ class Commands(utils.QWidget):
     # ------------------------------------------------------------------------
     
     def eventFilter(self,receiver,event):
-        if receiver == self.scrollArea and event.type() == utils.QEvent.KeyPress:
-            # NOTE 搜索执行输入的键盘事件
-            try:
+        
+        try:
+            if receiver == self.scrollArea and event.type() == utils.QEvent.KeyPress:
+                # NOTE 搜索执行输入的键盘事件
                 self.parent.parent.search.keyPressEvent(event)
-            except:
-                # NOTE 如果报错则不阻止事件
-                return False
-            else:
                 return True
+        except:
+            # NOTE 如果报错则不阻止事件
+            return False
         else:
             return False
-
     def clear(self):
         for i in reversed(range(self.layout.count()-1)):
             item = self.layout.itemAt(i)
