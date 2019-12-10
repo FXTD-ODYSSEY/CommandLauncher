@@ -7,7 +7,8 @@ __date__ = '2019-12-07 14:33:16'
 
 import re
 from maya import cmds
-
+from maya import mel
+from functools import partial
 from .ui import utils
 
 def get():
@@ -19,7 +20,7 @@ def get():
     :rtype: dict
     """
     if not "COMMANDS" in globals().keys():
-        return {} 
+        return {}
     return globals().get("COMMANDS")
 
 def getMenuList():
@@ -98,6 +99,7 @@ def store():
 
     # loop menu bar
     menuBar = utils.mayaMenu()
+    getShelfButton()
     MENU_LIST = _store(menuBar)
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
@@ -207,3 +209,93 @@ def getItemOptionBox(item, name):
         return
 
     COMMANDS[name]["cmdOption"]   = item
+
+def loadShelf(index):
+    """loadShelf 
+    
+    convert shelf.mel loadShelf global proc to python code (Using mel2py convert code)
+    
+    Parameters
+    ----------
+    index : int
+        the loading shelf index
+    """
+    from pymel.all import *
+    varName="shelfName" + str(index)
+    shelfName=str(optionVar(q=varName))
+    if shelfLayout(shelfName, exists=1) and shelfLayout(shelfName, query=1, numberOfChildren=1) == 0:
+        shelfFileNum="shelfFile" + str(index)
+        shelfFile=str(optionVar(q=shelfFileNum))
+        if shelfFile != 0:
+            isFile=int(mel.exists(shelfFile))
+            if isFile != 0:
+                setParent(shelfName)
+                # If we use evalContinue then we aren't notified if there are any errors
+                #				evalContinue $shelfFile;
+                shelfVersion=""
+                # if catch(lambda: )):
+                try:
+                    shelfVersion=str(mel.eval(shelfFile))
+                except:
+                    returnStr = ""
+                    msg=str((mel.uiRes("m_shelf.kShelfItemsCantBeRead")))
+                    shelfLabel=str(mel.shelfLabel_melToUI(shelfName))
+                    msg=str(format(msg, s=shelfLabel))
+                    mel.warning(msg, noContext=1)
+                    
+                optionVar(intValue=(("shelfLoad" + str(index)), True))
+                #  Now that shelf has been loaded adjust optionVar accordingly
+                # Store the version where the shelf was introduced as well.
+                if not shelfVersion:
+                    optionVar(stringValue=(("shelfVersion" + str(index)), shelfVersion))
+                    # If the shelf already exists add the version information
+                    if shelfLayout(shelfName, exists=1):
+                        shelfLayout(shelfName, edit=1, version=shelfVersion)
+                        
+      
+def getShelfButton():
+
+    # NOTE 获取工具架名称
+    gShelfTopLevel = mel.eval("$temp = $gShelfTopLevel")
+    shelves = cmds.shelfTabLayout(gShelfTopLevel,q=1,ca=1)
+    labels = cmds.shelfTabLayout(gShelfTopLevel,q=1,tl=1)
+    for i,[shelf,label] in enumerate(zip(shelves,labels),1):
+        # NOTE 获取完整组件名称
+        shelf = cmds.shelfLayout(shelf,q=1,fpn=1)
+        loadShelf(i)
+        for btn in cmds.shelfLayout(shelf,q=1,ca=1):
+            if cmds.shelfButton(btn,q=1,ex=1):
+                name = cmds.shelfButton(btn,q=1,label=1)
+                icon = cmds.shelfButton(btn,q=1,i=1)
+                # tooltip = cmds.shelfButton(btn,q=1,ann=1)
+                
+                COMMANDS[name] = dict()
+                COMMANDS[name]["name"] = name
+                COMMANDS[name]["pin"] = False
+                COMMANDS[name]["icon"] = utils.QIcon( ":/{0}".format(icon))
+                COMMANDS[name]["group"] = "Shelf: %s" % label
+                COMMANDS[name]["search"] = "%s%s"%(label,name)
+                COMMANDS[name]["hierarchy"] = "%s > %s"%(label,name)
+                # COMMANDS[name]["menu"] = menu_list[-1]
+                
+                # NOTE 点击运行的代码
+                command = cmds.shelfButton(btn,q=1,c=1)
+                command_type = cmds.shelfButton(btn,q=1,c=1,stp=1)
+                if command_type.lower() == "mel":
+                    # Note 运行双击的 mel 代码
+                    COMMANDS[name]["cmd"]  = partial(mel.eval,command)
+                else:
+                    # Note 运行双击的 python 代码
+                    COMMANDS[name]["cmd"]  = partial(lambda x:eval(compile(x, '<string>', 'exec')),command)
+
+                
+                # NOTE 查询双击 shelf 状态
+                options = cmds.shelfButton(btn,q=1,dcc=1)
+                if options:
+                    options_type = cmds.shelfButton(btn,q=1,dcc=1,stp=1)
+                    if options_type.lower() == "mel":
+                        # Note 运行双击的 mel 代码
+                        COMMANDS[name]["cmdOption"]  = partial(mel.eval,options)
+                    else:
+                        # Note 运行双击的 python 代码
+                        COMMANDS[name]["cmdOption"]  = partial(lambda x:eval(compile(x, '<string>', 'exec')),options)

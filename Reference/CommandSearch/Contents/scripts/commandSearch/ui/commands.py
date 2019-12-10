@@ -249,7 +249,10 @@ class Button(utils.QWidget):
         window.hide()
         window.parent.hide()
         cmds.selectPref(ps=0,psf=0)
-        self.command.trigger()
+        if hasattr(self.command,"trigger"):
+            self.command.trigger()
+        else:
+            self.command()
    
     def execOption_(self):
         if not self.commandOption:
@@ -259,4 +262,7 @@ class Button(utils.QWidget):
         window.hide()
         window.parent.hide()
         cmds.selectPref(ps=0,psf=0)
-        self.commandOption.trigger()
+        if hasattr(self.commandOption,"trigger"):
+            self.commandOption.trigger()
+        else:
+            self.commandOption()
