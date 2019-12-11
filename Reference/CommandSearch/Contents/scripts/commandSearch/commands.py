@@ -108,9 +108,9 @@ def store():
 
     # loop menu bar
     menuBar = utils.mayaMenu()
+    MENU_LIST = _store(menuBar)
     getShelfButton()
     getCmdsMember()
-    MENU_LIST = _store(menuBar)
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
     return MENU_LIST
