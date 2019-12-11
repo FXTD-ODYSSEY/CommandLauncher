@@ -220,38 +220,30 @@ def loadShelf(index):
     index : int
         the loading shelf index
     """
-    from pymel.all import *
+    
     varName="shelfName" + str(index)
-    shelfName=str(optionVar(q=varName))
-    if shelfLayout(shelfName, exists=1) and shelfLayout(shelfName, query=1, numberOfChildren=1) == 0:
+    shelfName=str(cmds.optionVar(q=varName))
+    if cmds.shelfLayout(shelfName, exists=1) and cmds.shelfLayout(shelfName, query=1, numberOfChildren=1) == 0:
         shelfFileNum="shelfFile" + str(index)
-        shelfFile=str(optionVar(q=shelfFileNum))
-        if shelfFile != 0:
-            isFile=int(mel.exists(shelfFile))
-            if isFile != 0:
-                setParent(shelfName)
-                # If we use evalContinue then we aren't notified if there are any errors
-                #				evalContinue $shelfFile;
-                shelfVersion=""
-                # if catch(lambda: )):
-                try:
-                    shelfVersion=str(mel.eval(shelfFile))
-                except:
-                    returnStr = ""
-                    msg=str((mel.uiRes("m_shelf.kShelfItemsCantBeRead")))
-                    shelfLabel=str(mel.shelfLabel_melToUI(shelfName))
-                    msg=str(format(msg, s=shelfLabel))
-                    mel.warning(msg, noContext=1)
-                    
-                optionVar(intValue=(("shelfLoad" + str(index)), True))
-                #  Now that shelf has been loaded adjust optionVar accordingly
-                # Store the version where the shelf was introduced as well.
-                if not shelfVersion:
-                    optionVar(stringValue=(("shelfVersion" + str(index)), shelfVersion))
-                    # If the shelf already exists add the version information
-                    if shelfLayout(shelfName, exists=1):
-                        shelfLayout(shelfName, edit=1, version=shelfVersion)
-                        
+        shelfFile=cmds.optionVar(q=shelfFileNum)
+        if shelfFile and mel.eval("exists %s"%shelfFile):
+            cmds.setParent(shelfName)
+            shelfVersion=""
+            try:
+                shelfVersion = mel.eval("eval %s"%shelfFile)
+            except:
+                print "eval %s fail" % shelfFile
+                import traceback
+                traceback.print_exc()
+                return False
+                
+            cmds.optionVar(intValue=(("shelfLoad" + str(index)), True))
+            if shelfVersion:
+                cmds.optionVar(stringValue=(("shelfVersion" + str(index)), shelfVersion))
+                if cmds.shelfLayout(shelfName, exists=1):
+                    cmds.shelfLayout(shelfName, edit=1, version=shelfVersion)
+
+    return True    
       
 def getShelfButton():
 
@@ -262,7 +254,9 @@ def getShelfButton():
     for i,[shelf,label] in enumerate(zip(shelves,labels),1):
         # NOTE 获取完整组件名称
         shelf = cmds.shelfLayout(shelf,q=1,fpn=1)
-        loadShelf(i)
+        if not loadShelf(i) and not cmds.shelfLayout(shelf,q=1,ca=1):
+            print "%s empty child" % shelf
+            continue
         for btn in cmds.shelfLayout(shelf,q=1,ca=1):
             if cmds.shelfButton(btn,q=1,ex=1):
                 name = cmds.shelfButton(btn,q=1,label=1)
