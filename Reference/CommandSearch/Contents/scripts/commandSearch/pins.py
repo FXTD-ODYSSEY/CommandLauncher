@@ -30,7 +30,7 @@ def findLocation():
         return
     
     # get app data file
-    path = os.path.join(path, "rjCMDSearch.json")
+    path = os.path.join(path, "Maya_CommandLauncher","CommandLauncher.json")
     return path  
  
 # ----------------------------------------------------------------------------  

@@ -361,6 +361,10 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.translateText(-1)
         self.comboBox.currentIndexChanged.connect(self.translateText)
         
+        # NOTE 获取当前设置
+        
+        self.Scroll_Lock_SP.valueChanged.connect(self.scrollLock)
+        self.Scroll_Start_SP.valueChanged.connect(self.scrollStart)
         
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
         
@@ -406,7 +410,6 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             self.command_refresh = u"Refresh"
             self.command_setting = u"Setting"
         
-        
         self.Scroll_Lock_Label.setText      ( self.Scroll_Lock      )
         self.Languge_Label.setText          ( self.Languge          )
         self.Display_Label.setText          ( self.Display          )
@@ -449,3 +452,15 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         if ptr is None:     ptr = OpenMayaUI.MQtUtil.findLayout( name )
         if ptr is None:     ptr = OpenMayaUI.MQtUtil.findMenuItem( name )
         if ptr is not None: return utils.shiboken.wrapInstance( long( ptr ), utils.QWidget )
+    
+    def loadJsons(self):
+        pass
+    
+    def dumpJsons(self):
+        pass
+    
+    def scrollLock(self,value):
+        print value
+    
+    def scrollStart(self,value):
+        print value
