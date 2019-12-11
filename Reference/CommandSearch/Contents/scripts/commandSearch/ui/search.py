@@ -296,29 +296,33 @@ class SearchEdit(utils.QLineEdit):
     def keyPressEvent(self,event):
         
         key = event.key()
+        KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         print "key",key
-        # NOTE 点击 shfit 键 不会导致失焦
-        if key == utils.Qt.Key_Shift:
-            self.setFocus()
-            return
-            
+        
         self.count = self.results.widget.layout.count() - 1
         if self.count < 1:
-            return super(SearchEdit,self).keyPressEvent(event)
-        
-        KeySequence = utils.QKeySequence(key+int(event.modifiers()))
-        # return super(SearchEdit,self).keyPressEvent(event)
-        
+            # NOTE 阻断 ctrl 键实现打字法任意切换
+            if key == utils.Qt.Key_Control:
+                return
+            # NOTE 点击 shfit 键 不会导致失焦
+            elif key == utils.Qt.Key_Shift:
+                self.setFocus()
+                return
+            else:
+                return super(SearchEdit,self).keyPressEvent(event)
+            
         if key == utils.Qt.Key_Control:
             for _,[item,_] in self.shortcut.items():
                 shortcut = item.shortcut.text()
                 shortcut = shortcut.replace("alt","ctrl")
                 item.shortcut.setText(shortcut)
+            return
         elif key == utils.Qt.Key_Alt:
             for _,[item,_] in self.shortcut.items():
                 shortcut = item.shortcut.text()
                 shortcut = shortcut.replace("ctrl","alt")
                 item.shortcut.setText(shortcut)
+            return
         # NOTE 还原样式
         elif self.selected != 0:
             item = self.currentItem()
@@ -401,7 +405,6 @@ class SearchEdit(utils.QLineEdit):
                     item.setPin()
                 self.setCommandStyle(item,self.mode)
             
-        
 
         # NOTE 点击 ` 键 打开菜单
         elif key == utils.Qt.Key_QuoteLeft and self.selected != 0:
@@ -484,7 +487,9 @@ class SearchEdit(utils.QLineEdit):
 
             self.setCommandStyle(item,self.mode)
             self.showShortcut()
-            
+        elif self.selected != 0:
+            item = self.currentItem()
+            self.setCommandStyle(item,0)
             
     def triggerShortcut(self,num):
         if self.shortcut.has_key(num):
