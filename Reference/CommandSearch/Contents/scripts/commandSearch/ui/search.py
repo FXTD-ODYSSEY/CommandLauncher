@@ -223,6 +223,9 @@ class SearchWidget(utils.QWidget):
         # filter commands
         matches = commands.filter(search)
 
+        # NOTE 只显示 100 个结果提高搜索效率
+        matches = matches[:100] if len(matches) > 100 else matches
+        
         # add commands
         widget = self.results.widget
         widget.populate(matches)
