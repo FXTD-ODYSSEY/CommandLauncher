@@ -9,6 +9,9 @@ from . import utils
 from .. import commands, pins
 from maya import cmds
 from maya import OpenMayaUI
+import locale
+
+
 class ManagerMenu(utils.QMenu):
     """
     Manager Menu 
@@ -33,8 +36,10 @@ class ManagerMenu(utils.QMenu):
         # connect
         self.aboutToShow.connect(self.aboutToShow_)
         
-        self.setting = SettingWindow()
         self.populate()
+        self.setting = SettingWindow(self)
+        self.setStyleSheet('font-family: Microsoft YaHei UI;')
+        
     # ------------------------------------------------------------------------
                 
     def aboutToShow_(self):
@@ -94,8 +99,8 @@ class ManagerMenu(utils.QMenu):
         self.group.setExclusive(False)
         self.group.buttonReleased.connect(self.setActive)
         
-        g = utils.Divider(self, "Pins")
-        self.add(g)
+        self.pins_div = utils.Divider(self, "Pins")
+        self.add(self.pins_div)
         
         # add pins
         for name in names:
@@ -114,24 +119,39 @@ class ManagerMenu(utils.QMenu):
         """
         Create set manager buttons.
         """ 
-        g = utils.Divider(self, "Sets")  
-        self.add(g)        
+        self.sets_div = utils.Divider(self, "Sets")  
+        self.add(self.sets_div)        
         
         self.edit = utils.QLineEdit()
         self.add(self.edit)    
 
-        self.addAction("Add", self.pinAdd)
-        self.addAction("Clear", self.pinClear)
-        self.addAction("Delete", self.pinDelete)
+        self.sets_add = utils.QAction("Add",self)
+        self.sets_add.triggered.connect(self.pinAdd)
+        
+        self.sets_clear = utils.QAction("Clear",self)
+        self.sets_clear.triggered.connect(self.pinClear)
+        
+        self.sets_delete = utils.QAction("Delete",self)
+        self.sets_delete.triggered.connect(self.pinDelete)
+        
+        self.addAction(self.sets_add)
+        self.addAction(self.sets_clear)
+        self.addAction(self.sets_delete)
         
     def populateCommands(self):
         """
         Create command refresh button.
         """ 
-        g = utils.Divider(self, "Commands")  
-        self.add(g)
-        self.addAction("Refresh", self.refresh)
-        self.addAction("Setting", self.setting.show)
+        self.command_div = utils.Divider(self, "Commands")  
+        self.add(self.command_div)
+        
+        self.command_refresh = utils.QAction("Refresh",self)
+        self.command_refresh.triggered.connect(self.refresh)
+        
+        self.command_setting = utils.QAction("Setting",self)
+        
+        self.addAction(self.command_refresh)
+        self.addAction(self.command_setting)
         
     # ------------------------------------------------------------------------
                 
@@ -238,6 +258,7 @@ class ManagerMenu(utils.QMenu):
         
         :raises ValueError: if name is invalid
         """
+        print pins.get().keys()
         if not self.pinName in pins.get().keys():
             raise ValueError("Search Commands: invalid name")
             return
@@ -313,36 +334,109 @@ class SettingWindow_UI(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle("Form")
-        self.Scroll_Lock_Label.setText("scroll lock line")
-        self.Languge_Label.setText("Language Mode")
-        self.Display_Label.setText("item display num")
-        self.Scroll_Start_Label.setText("scroll start line")
-        self.Shortcut_Label.setText("shortcut number")
         self.comboBox.setItemText(0, "English")
         self.comboBox.setItemText(1, u"中文")
 
 class SettingWindow(utils.QWidget,SettingWindow_UI):
     
-    def __init__(self):
+    def __init__(self,menu):
         super(SettingWindow,self).__init__()
         self.setupUi(self)
+        
+        self.menu = menu
+        menu.command_setting.triggered.connect(self.mayaShow)
+
+        # NOTE 获取当前系统的语言
+        self.translateText(-1)
+        self.comboBox.currentIndexChanged.connect(self.translateText)
+        
+        
+        self.setStyleSheet('font-family: Microsoft YaHei UI;')
+        
+    def translateText(self,index):
+        lang = ""
+        if index == -1:
+            lang,_ = locale.getdefaultlocale()
+        elif index == 0:
+            lang = "en_US"
+        elif index == 1:
+            lang = "zh_CN"
+
+        if lang == "zh_CN":
+            self.Scroll_Lock     = u"滚动锁定行"
+            self.Languge         = u"语言模式"
+            self.Display         = u"命令显示数量"
+            self.Scroll_Start    = u"开始滚动行"
+            self.Shortcut        = u"快捷键显示数量"
+            self.Title           = u"命令启动器 - 设定窗口"
+            self.comboBox.setCurrentIndex(1)
+            self.pins_div        = u"固定"
+            self.sets_div        = u"置顶集"
+            self.sets_add        = u"添加"
+            self.sets_clear      = u"清空"
+            self.sets_delete     = u"删除"
+            self.command_div     = u"命令"
+            self.command_refresh = u"刷新"
+            self.command_setting = u"设定"
+        else:
+            self.Scroll_Lock     = u"scroll lock line"
+            self.Languge         = u"Language Mode"
+            self.Display         = u"item display num"
+            self.Scroll_Start    = u"scroll start line"
+            self.Shortcut        = u"shortcut number"
+            self.Title           = u"CommandLauncher - SettingWindow"
+            self.comboBox.setCurrentIndex(0)
+            self.pins_div        = u"Pins"
+            self.sets_div        = u"Sets"
+            self.sets_add        = u"Add"
+            self.sets_clear      = u"Clear"
+            self.sets_delete     = u"Delete"
+            self.command_div     = u"Commands"
+            self.command_refresh = u"Refresh"
+            self.command_setting = u"Setting"
+        
+        
+        self.Scroll_Lock_Label.setText      ( self.Scroll_Lock      )
+        self.Languge_Label.setText          ( self.Languge          )
+        self.Display_Label.setText          ( self.Display          )
+        self.Scroll_Start_Label.setText     ( self.Scroll_Start     )
+        self.Shortcut_Label.setText         ( self.Shortcut         )
+        self.window().setWindowTitle        ( self.Title            )
+
+        if hasattr(self.menu,"pins_div"):
+            self.menu.pins_div.setText      ( self.pins_div         )
+            
+        self.menu.sets_div.setText          ( self.sets_div         )
+        self.menu.sets_add.setText          ( self.sets_add         )
+        self.menu.sets_clear.setText        ( self.sets_clear       )
+        self.menu.sets_delete.setText       ( self.sets_delete      )
+
+        self.menu.command_div.setText       ( self.command_div      )
+        self.menu.command_refresh.setText   ( self.command_refresh  )
+        self.menu.command_setting.setText   ( self.command_setting  )
+
+        
+    def mayaShow(self):
         # NOTE 如果变量存在 就检查窗口多开
         if cmds.window("CMDLauncher_SettingWindow",q=1,ex=1):
             cmds.deleteUI('CMDLauncher_SettingWindow')
-
-        window = cmds.window("CMDLauncher_SettingWindow",title=u"CommandLauncher - SettingWindow")
+        window = cmds.window("CMDLauncher_SettingWindow",title=self.Title)
+        cmds.showWindow(window)
         # NOTE 将Maya窗口转换成 Qt 组件
-        self.ptr = self.mayaToQT(window)
-        self.ptr.setLayout(utils.QVBoxLayout())
-        self.ptr.layout().setContentsMargins(0,0,0,0)
-        self.ptr.layout().addWidget(self)
+        ptr = self.mayaToQT(window)
+        ptr.setLayout(utils.QVBoxLayout())
+        ptr.layout().setContentsMargins(0,0,0,0)
+        ptr.layout().addWidget(self)
+        ptr.destroyed.connect(self._close)
+        ptr.resize(0,0)
         
-    def show(self):
-        self.ptr.show()
+    def _close(self):
+        # NOTE 脱离要删除的窗口 | 由于自身依附在 ManagerMenu 上 因此不会被垃圾回收
+        self.setParent(utils.mayaWindow())
 
     def mayaToQT( self,name ):
-            # Maya -> QWidget
-            ptr = OpenMayaUI.MQtUtil.findControl( name )
-            if ptr is None:         ptr = OpenMayaUI.MQtUtil.findLayout( name )
-            if ptr is None:         ptr = OpenMayaUI.MQtUtil.findMenuItem( name )
-            if ptr is not None:     return utils.shiboken.wrapInstance( long( ptr ), utils.QWidget )
+        # Maya -> QWidget
+        ptr = OpenMayaUI.MQtUtil.findControl( name )
+        if ptr is None:     ptr = OpenMayaUI.MQtUtil.findLayout( name )
+        if ptr is None:     ptr = OpenMayaUI.MQtUtil.findMenuItem( name )
+        if ptr is not None: return utils.shiboken.wrapInstance( long( ptr ), utils.QWidget )

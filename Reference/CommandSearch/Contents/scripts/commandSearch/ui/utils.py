@@ -130,10 +130,10 @@ class Divider(QWidget):
         frameSS = "QFrame{color: gray; margin: 0 12 0 12;}"
         
         # create widgets
-        label = QLabel(self)
-        label.setText(group)
-        label.setFixedHeight(12)
-        label.setStyleSheet(labelSS)
+        self.label = QLabel(self)
+        self.label.setText(group)
+        self.label.setFixedHeight(12)
+        self.label.setStyleSheet(labelSS)
         
         sep01 = QFrame(self)
         sep02 = QFrame(self)
@@ -146,9 +146,12 @@ class Divider(QWidget):
         # create layout
         layout = QHBoxLayout(self)
         layout.addWidget(sep01)
-        layout.addWidget(label)
+        layout.addWidget(self.label)
         layout.addWidget(sep02)
                 
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
         self.setFixedHeight(12)
+    
+    def setText(self,text):
+        self.label.setText(text)
