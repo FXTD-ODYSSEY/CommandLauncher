@@ -207,6 +207,7 @@ def getItem(item, name, parents , menu_list):
     COMMANDS[name]["search"] = "".join([p.lower() for p in parents]) 
     COMMANDS[name]["hierarchy"] = " > ".join(parents)
     COMMANDS[name]["menu"] = menu_list[-1]
+    COMMANDS[name]["category"] = "menu"
       
 def getItemOptionBox(item, name):
     """
@@ -230,6 +231,7 @@ def getCmdsMember():
         COMMANDS[name]["search"] = name
         COMMANDS[name]["hierarchy"] = name
         COMMANDS[name]["cmd"]  = func
+        COMMANDS[name]["category"] = "cmds"
 
 
 def loadShelf(index):
@@ -298,6 +300,7 @@ def getShelfButton():
                 COMMANDS[name]["group"] = "Shelf: %s" % label
                 COMMANDS[name]["search"] = "%s%s"%(label,name)
                 COMMANDS[name]["hierarchy"] = "%s > %s"%(label,name)
+                COMMANDS[name]["category"] = "shelf"
                 # COMMANDS[name]["menu"] = menu_list[-1]
                 
                 # NOTE 点击运行的代码
