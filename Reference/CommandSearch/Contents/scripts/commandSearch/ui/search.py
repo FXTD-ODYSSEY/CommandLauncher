@@ -200,7 +200,11 @@ class SearchWidget(utils.QWidget):
         characters the input field holds, used when you want to search for 
         something with less than 4 char
         """
-        self.process(0)
+        # NOTE 如果搜索框弹出，执行第一个命令按钮
+        if self.results.isVisible():
+            self.search.triggerShortcut(1)
+        else:
+            self.process(0)
         
     # ------------------------------------------------------------------------
     
@@ -291,12 +295,17 @@ class SearchEdit(utils.QLineEdit):
     
     def keyPressEvent(self,event):
         
+        key = event.key()
+        print "key",key
+        # NOTE 点击 shfit 键 不会导致失焦
+        if key == utils.Qt.Key_Shift:
+            self.setFocus()
+            return
+            
         self.count = self.results.widget.layout.count() - 1
         if self.count < 1:
             return super(SearchEdit,self).keyPressEvent(event)
         
-        key = event.key()
-        print "key",key
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         # return super(SearchEdit,self).keyPressEvent(event)
         
@@ -392,6 +401,8 @@ class SearchEdit(utils.QLineEdit):
                     item.setPin()
                 self.setCommandStyle(item,self.mode)
             
+        
+
         # NOTE 点击 ` 键 打开菜单
         elif key == utils.Qt.Key_QuoteLeft and self.selected != 0:
             print utils.QKeySequence("Ctrl+1")
