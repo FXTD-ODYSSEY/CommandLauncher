@@ -24,6 +24,16 @@ class ManagerMenu(utils.QMenu):
     """
     def __init__(self, parent=None):
         utils.QMenu.__init__(self, parent)
+        self.RB_dict = {}
+        
+        self.pins_div_text        = ""
+        self.sets_div_text        = ""
+        self.sets_add_text        = ""
+        self.sets_clear_text      = ""
+        self.sets_delete_text     = ""
+        self.command_div_text     = ""
+        self.command_refresh_text = ""
+        self.command_setting_text = ""
         
         # variable
         self.parent = parent
@@ -36,9 +46,9 @@ class ManagerMenu(utils.QMenu):
         # connect
         self.aboutToShow.connect(self.aboutToShow_)
         
-        self.populate()
         self.setting = SettingWindow(self)
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
+        
         
     # ------------------------------------------------------------------------
                 
@@ -48,9 +58,10 @@ class ManagerMenu(utils.QMenu):
         with the read pin set data and the menu is positioned.
         """
         # get pins
-        pins.read()
+        self.pins =  pins.read()
         
         # populate
+        self.populate()
         self.position()
 
         self.edit.setFocus()
@@ -99,7 +110,7 @@ class ManagerMenu(utils.QMenu):
         self.group.setExclusive(False)
         self.group.buttonReleased.connect(self.setActive)
         
-        self.pins_div = utils.Divider(self, "Pins")
+        self.pins_div = utils.Divider(self, self.pins_div_text)
         self.add(self.pins_div)
         
         # add pins
@@ -114,24 +125,26 @@ class ManagerMenu(utils.QMenu):
             # add pin
             self.add(radio)
             self.group.addButton(radio)
+            
+            self.RB_dict[name] = radio
                 
     def populateSets(self):
         """
         Create set manager buttons.
         """ 
-        self.sets_div = utils.Divider(self, "Sets")  
+        self.sets_div = utils.Divider(self, self.sets_div_text)  
         self.add(self.sets_div)        
         
         self.edit = utils.QLineEdit()
         self.add(self.edit)    
 
-        self.sets_add = utils.QAction("Add",self)
+        self.sets_add = utils.QAction(self.sets_add_text,self)
         self.sets_add.triggered.connect(self.pinAdd)
         
-        self.sets_clear = utils.QAction("Clear",self)
+        self.sets_clear = utils.QAction(self.sets_clear_text,self)
         self.sets_clear.triggered.connect(self.pinClear)
         
-        self.sets_delete = utils.QAction("Delete",self)
+        self.sets_delete = utils.QAction(self.sets_delete_text,self)
         self.sets_delete.triggered.connect(self.pinDelete)
         
         self.addAction(self.sets_add)
@@ -142,13 +155,14 @@ class ManagerMenu(utils.QMenu):
         """
         Create command refresh button.
         """ 
-        self.command_div = utils.Divider(self, "Commands")  
+        self.command_div = utils.Divider(self, self.command_div_text)  
         self.add(self.command_div)
         
-        self.command_refresh = utils.QAction("Refresh",self)
+        self.command_refresh = utils.QAction(self.command_refresh_text,self)
         self.command_refresh.triggered.connect(self.refresh)
         
-        self.command_setting = utils.QAction("Setting",self)
+        self.command_setting = utils.QAction(self.command_setting_text,self)
+        self.command_setting.triggered.connect(self.setting.mayaShow)
         
         self.addAction(self.command_refresh)
         self.addAction(self.command_setting)
@@ -234,22 +248,18 @@ class ManagerMenu(utils.QMenu):
         # write to file
         pins.write()
        
+        self.populate()
+
     def pinClear(self):
         """
         Clear all pins and clear set selection.
         """
-        if not self.pinName in pins.get().keys():
-            raise ValueError("Search Commands: invalid name")
-            return
-
         # clear all pins
-        for _, v in commands.get().iteritems():
+        for k, v in commands.get().iteritems():
             v["pin"] = False
         
-        pins.get()[self.pinName] = []
-        pins.write()
+        self.active = None
 
-        # self.active = None
 
     def pinDelete(self):
         """
@@ -258,7 +268,7 @@ class ManagerMenu(utils.QMenu):
         
         :raises ValueError: if name is invalid
         """
-        print pins.get().keys()
+
         if not self.pinName in pins.get().keys():
             raise ValueError("Search Commands: invalid name")
             return
@@ -269,6 +279,8 @@ class ManagerMenu(utils.QMenu):
         
         # write to file
         pins.write()
+        
+        self.RB_dict[self.pinName].setParent(None)
 
     # --------------------------------------------------------------------
 
@@ -344,7 +356,6 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.setupUi(self)
         
         self.menu = menu
-        menu.command_setting.triggered.connect(self.mayaShow)
 
         # NOTE 获取当前系统的语言
         self.translateText(-1)
@@ -403,18 +414,16 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.Shortcut_Label.setText         ( self.Shortcut         )
         self.window().setWindowTitle        ( self.Title            )
 
-        if hasattr(self.menu,"pins_div"):
-            self.menu.pins_div.setText      ( self.pins_div         )
+        self.menu.pins_div_text        = self.pins_div         
             
-        self.menu.sets_div.setText          ( self.sets_div         )
-        self.menu.sets_add.setText          ( self.sets_add         )
-        self.menu.sets_clear.setText        ( self.sets_clear       )
-        self.menu.sets_delete.setText       ( self.sets_delete      )
+        self.menu.sets_div_text        = self.sets_div         
+        self.menu.sets_add_text        = self.sets_add         
+        self.menu.sets_clear_text      = self.sets_clear       
+        self.menu.sets_delete_text     = self.sets_delete      
 
-        self.menu.command_div.setText       ( self.command_div      )
-        self.menu.command_refresh.setText   ( self.command_refresh  )
-        self.menu.command_setting.setText   ( self.command_setting  )
-
+        self.menu.command_div_text     = self.command_div      
+        self.menu.command_refresh_text = self.command_refresh  
+        self.menu.command_setting_text = self.command_setting  
         
     def mayaShow(self):
         # NOTE 如果变量存在 就检查窗口多开

@@ -63,6 +63,8 @@ def read():
     
     # update pins
     PINS.update(decoded)
+    
+    return PINS
           
 def write():
     """
