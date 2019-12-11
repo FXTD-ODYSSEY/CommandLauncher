@@ -114,7 +114,7 @@ class SearchWidget(utils.QWidget):
         self.timer.stop()
         # print "tab_long_press",self.tab_long_press
         # print "timer_count",self.timer_count
-        if self.timer_count < 1:
+        if self.timer_count <= 1:
             # NOTE 如果小于等于 3 说明不是长按
             if self.tab_long_press <=3:
                 self.show()
@@ -137,7 +137,7 @@ class SearchWidget(utils.QWidget):
         if hasattr(event,"type") and event.type() == utils.QEvent.KeyRelease:
             # NOTE 敲击 Tab 键
             if event.key() == utils.Qt.Key_Tab:
-                
+                # print "Tab press",self.timer.isActive()
                 self.tab_long_press += 1
                 if not event.isAutoRepeat():
                     mel.eval("dR_paintPress;")
