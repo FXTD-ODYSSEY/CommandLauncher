@@ -209,8 +209,8 @@ class Button(utils.QWidget):
 
             
         # set pin
-        if info.get("pin"):         self.setPin()
-        else:                       self.setUnpin()
+        if info.get("pin"):         self.setPin(True)
+        else:                       self.setUnpin(True)
             
     # ------------------------------------------------------------------------
     
@@ -229,14 +229,25 @@ class Button(utils.QWidget):
           
     # ------------------------------------------------------------------------
         
-    def setPin(self):
+    def setPin(self,init=False):
         self.info["pin"] = True
         self.pin.setIcon(utils.QIcon(PIN_ICON))
+        manager = self.window().parent.manager
+        if manager.active and not init:
+            manager.edit.setText(manager.active)
+            manager.pinAdd()
+            manager.edit.setText("")
+
         self.pin.pressed.connect(self.setUnpin)
 
-    def setUnpin(self):
+    def setUnpin(self,init=False):
         self.info["pin"] = False
         self.pin.setIcon(utils.QIcon(UNPIN_ICON))
+        manager = self.window().parent.manager
+        if manager.active and not init:
+            manager.edit.setText(manager.active)
+            manager.pinAdd()
+            manager.edit.setText("")
         self.pin.pressed.connect(self.setPin)
         
     # ------------------------------------------------------------------------

@@ -65,8 +65,8 @@ class SearchWidget(utils.QWidget):
         self.search_button.setIcon(utils.findSearchIcon())
         self.search_button.setIconSize(utils.QSize(25,25))   
         
-        self.manger_menu = manager.ManagerMenu(self)
-        self.search_button.setMenu(self.manger_menu)
+        self.manager = manager.ManagerMenu(self)
+        self.search_button.setMenu(self.manager)
         
         # NOTE window
         self.ResultsWindow = results.ResultsWindow(self)
@@ -80,8 +80,9 @@ class SearchWidget(utils.QWidget):
         
         self.search = SearchEdit(self, self.container,self.results)
         
-        self.filter = utils.QLabel("TEST")
+        self.filter = utils.QLabel()
         self.filter.hide()
+        self.filter.setStyleSheet("color:orange")
         
         # NOTE add widgets
         layout.addWidget(self.search_button)
@@ -105,8 +106,6 @@ class SearchWidget(utils.QWidget):
         app.installEventFilter(self)
 
 
-        self.display_num = 100
-        
     # ------------------------------------------------------------------------
 
     def timerEvent(self):
@@ -142,7 +141,7 @@ class SearchWidget(utils.QWidget):
         # NOTE 键盘事件
         if hasattr(event,"type") and event.type() == utils.QEvent.KeyRelease:
             # NOTE 敲击 Tab 键
-            if event.key() == utils.Qt.Key_Tab:
+            if event.key() == utils.Qt.Key_Tab and not self.isVisible():
                 self.tab_long_press += 1
                 if not event.isAutoRepeat():
                     mel.eval("dR_paintPress;")
@@ -173,7 +172,7 @@ class SearchWidget(utils.QWidget):
                 'QWindow' not in str(receiver) and
                 receiver not in self.children() and
                 receiver not in self.container.children() and
-                receiver not in self.manger_menu.children() and
+                receiver not in self.manager.children() and
                 receiver.window() != self.results and
                 receiver != self and
                 type(receiver.parent()) != utils.Divider
@@ -239,8 +238,8 @@ class SearchWidget(utils.QWidget):
             matches = filter(lambda x: x["category"] == self.search.filter, matches)
 
         # NOTE 默认只显示 100 个结果提高搜索效率
-        if self.display_num:
-            matches = matches[:self.display_num] if len(matches) > 100 else matches
+        if self.search.display_num:
+            matches = matches[:self.search.display_num] if len(matches) > 100 else matches
 
         # add commands
         widget = self.results.widget
@@ -300,10 +299,12 @@ class SearchEdit(utils.QLineEdit):
         self.mode = 0
         
         self.shortcut = {}
+        self.filter = ""
+
         self.scroll_start = 3
         self.scroll_locked = 4
         self.shortcut_num = 8
-        self.filter = ""
+        self.display_num = 100
 
     # -----------------------------------------------------------------------
     def filterDisplay(self,mode):
@@ -342,17 +343,23 @@ class SearchEdit(utils.QLineEdit):
         # NOTE 点击 shfit 键 不会导致失焦
         elif key == utils.Qt.Key_Shift:
             return
-        # NOTE 开启过滤模式
+        # NOTE 开启 menu 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+Q"):
             self.filterDisplay("menu")
             return
-        # NOTE 开启过滤模式
+        # NOTE 开启 shelf 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+W"):
             self.filterDisplay("shelf")
             return
-        # NOTE 开启过滤模式
+        # NOTE 开启 cmds 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+E"):
             self.filterDisplay("cmds")
+            return
+         # NOTE 打开搜索菜单
+        elif KeySequence == utils.QKeySequence("Ctrl+`"):
+            manager = self.parent.manager
+            manager.aboutToShow_()
+            manager.show()
             return
 
         self.count = self.results.widget.layout.count() - 1
@@ -455,11 +462,11 @@ class SearchEdit(utils.QLineEdit):
                 self.setCommandStyle(item,self.mode)
             
 
-        # NOTE 点击 ` 键 打开菜单
-        elif key == utils.Qt.Key_QuoteLeft and self.selected != 0:
-            print utils.QKeySequence("Ctrl+1")
-            print utils.QKeySequence("Shift+1")
-            print utils.QKeySequence("Ctrl+Shift+1")
+        # # NOTE 点击 ` 键 打开菜单
+        # elif key == utils.Qt.Key_QuoteLeft:
+        #     print utils.QKeySequence("Ctrl+1")
+        #     print utils.QKeySequence("Shift+1")
+        #     print utils.QKeySequence("Ctrl+Shift+1")
             # menu = item.info["menu"]
      
             # for child in menu.children():
@@ -518,9 +525,6 @@ class SearchEdit(utils.QLineEdit):
             self.jumpToShortcut(8)
         elif KeySequence == utils.QKeySequence("alt+9"):
             self.jumpToShortcut(9)
-
-        
-
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 
