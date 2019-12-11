@@ -6,6 +6,8 @@ __date__ = '2019-12-07 14:33:16'
 
 
 import re
+import os
+import inspect
 from maya import cmds
 from maya import mel
 from functools import partial
@@ -100,6 +102,7 @@ def store():
     # loop menu bar
     menuBar = utils.mayaMenu()
     getShelfButton()
+    getCmdsMember()
     MENU_LIST = _store(menuBar)
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
@@ -210,10 +213,22 @@ def getItemOptionBox(item, name):
 
     COMMANDS[name]["cmdOption"]   = item
 
+def getCmdsMember():
+    for (name, func) in inspect.getmembers(cmds, callable):
+        COMMANDS[name] = dict()
+        COMMANDS[name]["name"] = name
+        COMMANDS[name]["pin"] = False
+        COMMANDS[name]["icon"] = utils.QIcon()
+        COMMANDS[name]["group"] = "Maya Mel&cmds Module" 
+        COMMANDS[name]["search"] = name
+        COMMANDS[name]["hierarchy"] = name
+        COMMANDS[name]["cmd"]  = func
+
+
 def loadShelf(index):
     """loadShelf 
     
-    convert shelf.mel loadShelf global proc to python code (Using mel2py convert code)
+    convert shelf.mel loadShelf global proc to python code
     
     Parameters
     ----------
@@ -246,7 +261,10 @@ def loadShelf(index):
     return True    
       
 def getShelfButton():
-
+    """getShelfButton 
+    
+    Get Command data from Maya Shelf
+    """
     # NOTE 获取工具架名称
     gShelfTopLevel = mel.eval("$temp = $gShelfTopLevel")
     shelves = cmds.shelfTabLayout(gShelfTopLevel,q=1,ca=1)
@@ -266,7 +284,10 @@ def getShelfButton():
                 COMMANDS[name] = dict()
                 COMMANDS[name]["name"] = name
                 COMMANDS[name]["pin"] = False
-                COMMANDS[name]["icon"] = utils.QIcon( ":/{0}".format(icon))
+                if os.path.exists(icon):
+                    COMMANDS[name]["icon"] = utils.QIcon(icon)
+                else:
+                    COMMANDS[name]["icon"] = utils.QIcon( ":/{0}".format(icon))
                 COMMANDS[name]["group"] = "Shelf: %s" % label
                 COMMANDS[name]["search"] = "%s%s"%(label,name)
                 COMMANDS[name]["hierarchy"] = "%s > %s"%(label,name)
