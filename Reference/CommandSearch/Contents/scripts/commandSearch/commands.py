@@ -12,6 +12,8 @@ from maya import cmds
 from maya import mel
 from functools import partial
 from .ui import utils
+import difflib
+
 
 def get():
     """
@@ -51,17 +53,19 @@ def filter(search):
     regexes = []
 
     # generate regex
-    if search:
-        # NOTE split 实现空格关键词切分
-        for p in search.split():
+    if not search:
+        return []
 
-            regexes.append(
-                re.compile(
-                    r'.*' + 
-                    p + 
-                    r'.*'
-                )    
-            )
+    # NOTE split 实现空格关键词切分
+    for p in search.split():
+
+        regexes.append(
+            re.compile(
+                r'.*' + 
+                p + 
+                r'.*'
+            )    
+        )
 
     # filter commands
     for k, v in COMMANDS.iteritems():
@@ -82,7 +86,10 @@ def filter(search):
         if regexes and None not in states:
             matches.append(v)
 
-    matches.sort(key=lambda x:(-x["pin"], x["hierarchy"]))
+    # matches.sort(key=lambda x:(-x["pin"], x["hierarchy"]))
+    # NOTE https://github.com/csaez/quicklauncher/issues/12
+    ratio = lambda x, y: difflib.SequenceMatcher(None, x, y).ratio()
+    matches.sort(key=lambda x: (x["pin"],ratio(x["name"], search)),reverse=True)
     return matches
 
 # ----------------------------------------------------------------------------  
