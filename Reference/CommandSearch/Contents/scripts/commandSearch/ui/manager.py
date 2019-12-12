@@ -54,6 +54,7 @@ class ManagerMenu(utils.QMenu):
         
         self.setting = SettingWindow(self)
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
+        self.populate()
         
         
     # ------------------------------------------------------------------------
@@ -193,11 +194,19 @@ class ManagerMenu(utils.QMenu):
         
     # ------------------------------------------------------------------------
         
-    def setActive(self):
+    def setActive(self,num=0):
         """
         Switch active pin set to checked radio button.
         """
-        btn = self.group.checkedButton()
+        if num:
+            buttons = self.group.buttons()
+            if len(buttons) >= num:
+                btn = buttons[num-1]
+            else:
+                return
+        else:
+            btn = self.group.checkedButton()
+            
         if not btn:
             self.active = None
             for _, v in commands.get().iteritems():

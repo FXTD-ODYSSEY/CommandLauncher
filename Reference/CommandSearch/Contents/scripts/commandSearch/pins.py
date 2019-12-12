@@ -30,7 +30,11 @@ def findLocation():
         return
     
     # get app data file
-    path = os.path.join(path, "Maya_CommandLauncher","CommandLauncher.json")
+    directory = os.path.join(path, "Maya_CommandLauncher")
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
+    path = os.path.join(directory,"CommandLauncher.json")
     return path  
  
 # ----------------------------------------------------------------------------  

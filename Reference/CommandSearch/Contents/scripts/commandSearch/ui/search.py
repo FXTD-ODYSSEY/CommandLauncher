@@ -345,22 +345,34 @@ class SearchEdit(utils.QLineEdit):
             return
         # NOTE 开启 menu 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+Q"):
-            self.filterDisplay("menu")
-            return
+            return self.filterDisplay("menu")
         # NOTE 开启 shelf 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+W"):
-            self.filterDisplay("shelf")
-            return
+            return self.filterDisplay("shelf")
         # NOTE 开启 cmds 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+E"):
-            self.filterDisplay("cmds")
-            return
+            return self.filterDisplay("cmds")
          # NOTE 打开搜索菜单
         elif KeySequence == utils.QKeySequence("Ctrl+`"):
-            manager = self.parent.manager
-            manager.aboutToShow_()
-            manager.show()
-            return
+            return self.parent.manager.aboutToShow_()
+        elif KeySequence == utils.QKeySequence("ctrl+alt+1"):
+            return self.jumpToPins(1)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+2"):
+            return self.jumpToPins(2)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+3"):
+            return self.jumpToPins(3)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+4"):
+            return self.jumpToPins(4)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+5"):
+            return self.jumpToPins(5)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+6"):
+            return self.jumpToPins(6)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+7"):
+            return self.jumpToPins(7)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+8"):
+            return self.jumpToPins(8)
+        elif KeySequence == utils.QKeySequence("ctrl+alt+9"):
+            return self.jumpToPins(9)
 
         self.count = self.results.widget.layout.count() - 1
         if self.count < 1:
@@ -526,13 +538,14 @@ class SearchEdit(utils.QLineEdit):
         elif KeySequence == utils.QKeySequence("alt+9"):
             self.jumpToShortcut(9)
             
-        elif KeySequence == utils.QKeySequence("ctrl+alt+1"):
-            print "1"
-            
-            
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 
+    
+    def jumpToPins(self,num):
+        self.parent.manager.setActive(num)
+        self.parent.typing()
+    
     def jumpToShortcut(self,num):
         if self.shortcut.has_key(num):
             item,index = self.shortcut[num]
