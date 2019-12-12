@@ -40,7 +40,13 @@ def install():
     COMMAND_SEARCH = SearchWidget(parent)
     layout.addWidget(COMMAND_SEARCH)
 
-def setup():
+def setup(): 
+    clean()   
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
     COMMAND_LAUNCHER.setVisible(False)
     return COMMAND_LAUNCHER
+
+def clean():
+    for w in utils.mayaWindow().children():
+        if str(type(w)) == str(SearchWidget):
+            w.deleteLater()

@@ -65,9 +65,6 @@ class SearchWidget(utils.QWidget):
         self.search_button.setIcon(utils.findSearchIcon())
         self.search_button.setIconSize(utils.QSize(25,25))   
         
-        self.manager = manager.ManagerMenu(self)
-        self.search_button.setMenu(self.manager)
-        
         # NOTE window
         self.ResultsWindow = results.ResultsWindow(self)
         self.ResultsWindow.aboutToClose.connect(self.closeWindowEvent)
@@ -93,6 +90,9 @@ class SearchWidget(utils.QWidget):
         self.search.textChanged.connect(self.typing)
         self.search.returnPressed.connect(self.enter)
 
+        self.manager = manager.ManagerMenu(self)
+        self.search_button.setMenu(self.manager)
+        
         # NOTE 添加计时器
         self.timer = utils.QTimer()
         self.timer_count = 0
@@ -525,6 +525,11 @@ class SearchEdit(utils.QLineEdit):
             self.jumpToShortcut(8)
         elif KeySequence == utils.QKeySequence("alt+9"):
             self.jumpToShortcut(9)
+            
+        elif KeySequence == utils.QKeySequence("ctrl+alt+1"):
+            print "1"
+            
+            
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 
@@ -532,8 +537,8 @@ class SearchEdit(utils.QLineEdit):
         if self.shortcut.has_key(num):
             item,index = self.shortcut[num]
             self.selected = index
-            # scroll = self.results.widget.scrollArea.verticalScrollBar()
             # # NOTE 设置滚动值
+            # scroll = self.results.widget.scrollArea.verticalScrollBar()
             # if self.selected > self.scroll_start:
             #     height = self.scrollHeight()
             #     scroll.setValue(height)

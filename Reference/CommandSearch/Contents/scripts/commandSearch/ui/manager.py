@@ -9,8 +9,13 @@ from . import utils
 from .. import commands, pins
 from maya import cmds
 from maya import OpenMayaUI
-import locale
 
+import os
+import locale
+import webbrowser
+
+DIR = os.path.dirname(os.path.dirname(__file__))
+INSTRUNCTION_PATH = "file:///%s" % os.path.join(DIR,"instruction","README.html")
 
 class ManagerMenu(utils.QMenu):
     """
@@ -34,6 +39,7 @@ class ManagerMenu(utils.QMenu):
         self.command_div_text     = ""
         self.command_refresh_text = ""
         self.command_setting_text = ""
+        self.command_help_text    = ""
         
         # variable
         self.parent = parent
@@ -64,7 +70,7 @@ class ManagerMenu(utils.QMenu):
         self.populate()
         self.position()
 
-        self.edit.setFocus()
+        self.search.setFocus()
         
     # ------------------------------------------------------------------------
     
@@ -135,8 +141,8 @@ class ManagerMenu(utils.QMenu):
         self.sets_div = utils.Divider(self, self.sets_div_text)  
         self.add(self.sets_div)        
         
-        self.edit = utils.QLineEdit()
-        self.add(self.edit)    
+        self.search = utils.QLineEdit()
+        self.add(self.search)    
 
         self.sets_add = utils.QAction(self.sets_add_text,self)
         self.sets_add.triggered.connect(self.pinAdd)
@@ -164,8 +170,12 @@ class ManagerMenu(utils.QMenu):
         self.command_setting = utils.QAction(self.command_setting_text,self)
         self.command_setting.triggered.connect(self.setting.mayaShow)
         
+        self.command_help = utils.QAction(self.command_help_text,self)
+        self.command_help.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
+        
         self.addAction(self.command_refresh)
         self.addAction(self.command_setting)
+        self.addAction(self.command_help)
         
     # ------------------------------------------------------------------------
                 
@@ -215,7 +225,7 @@ class ManagerMenu(utils.QMenu):
         """
         Get text from QLineEdit
         """
-        return self.edit.text().lower()
+        return self.search.text().lower()
         
     def pinAdd(self):
         """
@@ -298,6 +308,7 @@ class SettingWindow_UI(object):
         Form.setObjectName("Form")
         Form.resize(379, 120)
         self.gridLayout = utils.QGridLayout(Form)
+        self.gridLayout.setContentsMargins(9,20,9,9)
         self.gridLayout.setObjectName("gridLayout")
         self.Scroll_Lock_SP = utils.QSpinBox(Form)
         self.Scroll_Lock_SP.setObjectName("Scroll_Lock_SP")
@@ -314,7 +325,7 @@ class SettingWindow_UI(object):
         self.Display_Label.setObjectName("label_4")
         self.gridLayout.addWidget(self.Display_Label, 3, 2, 1, 1)
         self.Display_SP = utils.QSpinBox(Form)
-        self.Display_SP.setMaximum(9)
+        self.Display_SP.setMaximum(9999)
         self.Display_SP.setObjectName("Display_SP")
         self.gridLayout.addWidget(self.Display_SP, 3, 3, 1, 1)
         self.Scroll_Start_SP = utils.QSpinBox(Form)
@@ -356,18 +367,62 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.setupUi(self)
         
         self.menu = menu
-
+        self.search = menu.parent.search
+        self.setupMenu()
+        
         # NOTE 获取当前系统的语言
         self.translateText(-1)
         self.comboBox.currentIndexChanged.connect(self.translateText)
         
         # NOTE 获取当前设置
+        scroll_start = self.search.scroll_start
+        self.Scroll_Start_SP.setValue(scroll_start)
+        scroll_locked = self.search.scroll_locked
+        self.Scroll_Lock_SP.setValue(scroll_locked)
+    
+        shortcut_num = self.search.shortcut_num
+        self.Shortcut_SP.setValue(shortcut_num)
+        display_num = self.search.display_num
+        self.Display_SP.setValue(display_num)
         
         self.Scroll_Lock_SP.valueChanged.connect(self.scrollLock)
         self.Scroll_Start_SP.valueChanged.connect(self.scrollStart)
+        self.Display_SP.valueChanged.connect(self.display)
+        self.Shortcut_SP.valueChanged.connect(self.shortcut)
         
+
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
+      
+    def setupMenu(self):
+        self.menuBar = utils.QMenuBar(self)
+        self.edit_menu = utils.QMenu(u'编辑',self)
+        self.menuBar.addMenu(self.edit_menu)
+        self.import_json_action = utils.QAction(u'导入设置', self)    
+        self.export_json_action = utils.QAction(u'导出设置', self)  
+        self.reset_json_action  = utils.QAction(u'重置设置', self)    
+        self.close_action       = utils.QAction(u'关闭', self)    
+
+        self.edit_menu.addAction(self.import_json_action)
+        self.edit_menu.addAction(self.export_json_action)
+        self.edit_menu.addAction(self.reset_json_action)
+        self.edit_menu.addSeparator()
+        self.edit_menu.addAction(self.close_action)
+
+        # NOTE 添加下拉菜单的功能触发
+        self.import_json_action.triggered.connect(self.importJsonSetting)
+        self.export_json_action.triggered.connect(self.exportJsonSetting)
+        self.reset_json_action.triggered.connect(self.resetJsonSetting)
+        self.close_action.triggered.connect(self.window().deleteLater)
         
+        self.help_menu = utils.QMenu(u'帮助',self)
+        self.menuBar.addMenu(self.help_menu)
+        self.help_action = utils.QAction(u'使用说明', self)    
+        self.help_menu.addAction(self.help_action)
+        
+        
+        self.help_action.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
+
+
     def translateText(self,index):
         lang = ""
         if index == -1:
@@ -378,13 +433,22 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             lang = "zh_CN"
 
         if lang == "zh_CN":
+            self.comboBox.setCurrentIndex(1)
+            self.edit_menu_text  = u'编辑'
+            self.import_text     = u'导入设置'
+            self.export_text     = u'导出设置'
+            self.reset_text      = u'重置设置'
+            self.close_text      = u'关闭'
+            self.help_menu_text  = u'帮助'
+            self.help_text       = u'使用说明'
+
             self.Scroll_Lock     = u"滚动锁定行"
             self.Languge         = u"语言模式"
             self.Display         = u"命令显示数量"
             self.Scroll_Start    = u"开始滚动行"
             self.Shortcut        = u"快捷键显示数量"
             self.Title           = u"命令启动器 - 设定窗口"
-            self.comboBox.setCurrentIndex(1)
+            
             self.pins_div        = u"固定"
             self.sets_div        = u"置顶集"
             self.sets_add        = u"添加"
@@ -392,15 +456,25 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             self.sets_delete     = u"删除"
             self.command_div     = u"命令"
             self.command_refresh = u"刷新"
-            self.command_setting = u"设定"
+            self.command_setting = u"设置"
+            self.command_help    = u"帮助"
         else:
+            self.comboBox.setCurrentIndex(0)
+            self.edit_menu_text  = u'Edit'
+            self.import_text     = u'Import'
+            self.export_text     = u'Export'
+            self.reset_text      = u'Reset'
+            self.close_text      = u'Close'
+            self.help_menu_text  = u'Help'
+            self.help_text       = u'Documentation'
+            
             self.Scroll_Lock     = u"scroll lock line"
             self.Languge         = u"Language Mode"
             self.Display         = u"item display num"
             self.Scroll_Start    = u"scroll start line"
             self.Shortcut        = u"shortcut number"
             self.Title           = u"CommandLauncher - SettingWindow"
-            self.comboBox.setCurrentIndex(0)
+            
             self.pins_div        = u"Pins"
             self.sets_div        = u"Sets"
             self.sets_add        = u"Add"
@@ -409,7 +483,16 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             self.command_div     = u"Commands"
             self.command_refresh = u"Refresh"
             self.command_setting = u"Setting"
+            self.command_help    = u"Help"
         
+        self.edit_menu.setTitle             ( self.edit_menu_text   )
+        self.import_json_action.setText     ( self.import_text      )
+        self.export_json_action.setText     ( self.export_text      )
+        self.reset_json_action.setText      ( self.reset_text       )
+        self.close_action.setText           ( self.close_text       )
+        self.help_menu.setTitle             ( self.help_menu_text   )
+        self.help_action.setText            ( self.help_text        )
+
         self.Scroll_Lock_Label.setText      ( self.Scroll_Lock      )
         self.Languge_Label.setText          ( self.Languge          )
         self.Display_Label.setText          ( self.Display          )
@@ -427,6 +510,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.menu.command_div_text     = self.command_div      
         self.menu.command_refresh_text = self.command_refresh  
         self.menu.command_setting_text = self.command_setting  
+        self.menu.command_help_text    = self.command_help  
         
     def mayaShow(self):
         # NOTE 如果变量存在 就检查窗口多开
@@ -453,14 +537,27 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         if ptr is None:     ptr = OpenMayaUI.MQtUtil.findMenuItem( name )
         if ptr is not None: return utils.shiboken.wrapInstance( long( ptr ), utils.QWidget )
     
-    def loadJsons(self):
+    def importJsonSetting(self):
         pass
     
-    def dumpJsons(self):
+    def exportJsonSetting(self):
         pass
-    
+ 
+    def resetJsonSetting(self):
+        self.translateText(-1)
+        self.Scroll_Start_SP.setValue(3)
+        self.Scroll_Lock_SP.setValue(4)
+        self.Shortcut_SP.setValue(8)
+        self.Display_SP.setValue(100)
+ 
     def scrollLock(self,value):
-        print value
+        self.search.scroll_locked = value
     
     def scrollStart(self,value):
-        print value
+        self.search.scroll_start = value
+    
+    def display(self,value):
+        self.search.display_num = value
+    
+    def shortcut(self,value):
+        self.search.shortcut_num = value
