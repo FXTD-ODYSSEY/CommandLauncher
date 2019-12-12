@@ -11,6 +11,7 @@ from maya import cmds
 from maya import OpenMayaUI
 
 import os
+import json
 import locale
 import webbrowser
 
@@ -375,6 +376,15 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         super(SettingWindow,self).__init__()
         self.setupUi(self)
         
+        self.setting_data = {}
+        
+        path = os.environ.get("LOCALAPPDATA")
+        directory = os.path.join(path, "Maya_CommandLauncher")
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        self.SETTING_PATH = os.path.join(directory,"setting.json")
+        
         self.menu = menu
         self.search = menu.parent.search
         self.setupMenu()
@@ -399,6 +409,8 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.Display_SP.valueChanged.connect(self.display)
         self.Shortcut_SP.valueChanged.connect(self.shortcut)
         
+        if os.path.exists(self.SETTING_PATH):
+            self.importJsonSetting(self.SETTING_PATH)
 
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
       
@@ -519,7 +531,11 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.menu.command_div_text     = self.command_div      
         self.menu.command_refresh_text = self.command_refresh  
         self.menu.command_setting_text = self.command_setting  
-        self.menu.command_help_text    = self.command_help  
+        self.menu.command_help_text    = self.command_help 
+        
+        if index != -1:
+            self.exportJsonSetting(self.SETTING_PATH)
+         
         
     def mayaShow(self):
         # NOTE 如果变量存在 就检查窗口多开
@@ -546,11 +562,49 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         if ptr is None:     ptr = OpenMayaUI.MQtUtil.findMenuItem( name )
         if ptr is not None: return utils.shiboken.wrapInstance( long( ptr ), utils.QWidget )
     
-    def importJsonSetting(self):
-        pass
-    
-    def exportJsonSetting(self):
-        pass
+    def importJsonSetting(self,path=None):
+        """
+        importJsonSetting 导入Json
+        
+        Keyword Arguments:
+            path {str} -- 导入路径 为空则弹出选择窗口获取 (default: {None})
+        """
+        if not path:
+            path,_ = utils.QFileDialog.getOpenFileName(self, filter= u"json (*.json)")
+            if not path:return
+
+        # NOTE 如果文件不存在则返回空
+        if not os.path.exists(path):return
+
+        with open(path,'r') as f:
+            self.setting_data = json.load(f,encoding="utf-8")
+
+         # NOTE 获取当前设置
+        self.comboBox.setCurrentIndex  ( self.setting_data["comboBox"]        )
+        self.Scroll_Start_SP.setValue  ( self.setting_data["Scroll_Start_SP"] )
+        self.Scroll_Lock_SP.setValue   ( self.setting_data["Scroll_Lock_SP"]  )
+        self.Shortcut_SP.setValue      ( self.setting_data["Shortcut_SP"]     )
+        self.Display_SP.setValue       ( self.setting_data["Display_SP"]      )
+        
+    def exportJsonSetting(self,path=None):
+        """
+        exportJsonSetting 导出Json
+        
+        Keyword Arguments:
+            path {str} -- 导出路径 为空则弹出选择窗口获取 (default: {None})
+        """
+        if not path:
+            path,_ = utils.QFileDialog.getSaveFileName(self,filter= u"json (*.json)")
+            if not path:return
+        
+        self.setting_data["comboBox"]        = self.comboBox.currentIndex()
+        self.setting_data["Scroll_Start_SP"] = self.Scroll_Start_SP.value()
+        self.setting_data["Scroll_Lock_SP"]  = self.Scroll_Lock_SP.value()
+        self.setting_data["Shortcut_SP"]     = self.Shortcut_SP.value()
+        self.setting_data["Display_SP"]      = self.Display_SP.value()
+        
+        with open(path,'w') as f:
+            json.dump(self.setting_data,f,indent=4)
  
     def resetJsonSetting(self):
         self.translateText(-1)
@@ -561,12 +615,16 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
  
     def scrollLock(self,value):
         self.search.scroll_locked = value
-    
+        self.exportJsonSetting(self.SETTING_PATH)
+
     def scrollStart(self,value):
         self.search.scroll_start = value
+        self.exportJsonSetting(self.SETTING_PATH)
     
     def display(self,value):
         self.search.display_num = value
+        self.exportJsonSetting(self.SETTING_PATH)
     
     def shortcut(self,value):
         self.search.shortcut_num = value
+        self.exportJsonSetting(self.SETTING_PATH)
