@@ -377,6 +377,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.setupUi(self)
         
         self.setting_data = {}
+        self.ptr = None
         
         path = os.environ.get("LOCALAPPDATA")
         directory = os.path.join(path, "Maya_CommandLauncher")
@@ -433,7 +434,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.import_json_action.triggered.connect(self.importJsonSetting)
         self.export_json_action.triggered.connect(self.exportJsonSetting)
         self.reset_json_action.triggered.connect(self.resetJsonSetting)
-        self.close_action.triggered.connect(self.window().deleteLater)
+        self.close_action.triggered.connect(lambda :self.ptr.close() if self.ptr else None)
         
         self.help_menu = utils.QMenu(u'帮助',self)
         self.menuBar.addMenu(self.help_menu)
@@ -442,8 +443,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         
         
         self.help_action.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
-
-
+            
     def translateText(self,index):
         lang = ""
         if index == -1:
@@ -544,12 +544,12 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         window = cmds.window("CMDLauncher_SettingWindow",title=self.Title)
         cmds.showWindow(window)
         # NOTE 将Maya窗口转换成 Qt 组件
-        ptr = self.mayaToQT(window)
-        ptr.setLayout(utils.QVBoxLayout())
-        ptr.layout().setContentsMargins(0,0,0,0)
-        ptr.layout().addWidget(self)
-        ptr.destroyed.connect(self._close)
-        ptr.resize(0,0)
+        self.ptr = self.mayaToQT(window)
+        self.ptr.setLayout(utils.QVBoxLayout())
+        self.ptr.layout().setContentsMargins(0,0,0,0)
+        self.ptr.layout().addWidget(self)
+        self.ptr.destroyed.connect(self._close)
+        self.ptr.resize(0,0)
         
     def _close(self):
         # NOTE 脱离要删除的窗口 | 由于自身依附在 ManagerMenu 上 因此不会被垃圾回收
