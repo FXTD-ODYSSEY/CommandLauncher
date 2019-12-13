@@ -125,6 +125,8 @@ class SearchWidget(utils.QWidget):
                 self.show()
                 # NOTE 选择输入
                 self.search.selectAll()
+                self.search.jumpToPins()
+                
                 
             self.tab_long_press = 0
         else:
@@ -144,7 +146,8 @@ class SearchWidget(utils.QWidget):
             if event.key() == utils.Qt.Key_Tab and not self.isVisible():
                 self.tab_long_press += 1
                 if not event.isAutoRepeat():
-                    mel.eval("dR_paintPress;")
+                    cmds.selectPref(psf=1,ps=1)
+                    # mel.eval("dR_paintPress;")
                     self.tab_long_press = 0
 
                 if self.timer.isActive():
@@ -335,7 +338,7 @@ class SearchEdit(utils.QLineEdit):
         
         key = event.key()
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
-        print "key",key
+        # print "key",key
         
         # NOTE 阻断 ctrl 键实现打字法任意切换
         if key == utils.Qt.Key_Control:
@@ -542,6 +545,9 @@ class SearchEdit(utils.QLineEdit):
     def pressDownKey(self):
         self.scrollBar = self.results.widget.scrollArea.verticalScrollBar()
         self.count = self.results.widget.layout.count() - 1
+        if self.count == 0:
+            return
+        
         self.selected += 1
         self.selected = self.selected % self.count
 
@@ -557,15 +563,24 @@ class SearchEdit(utils.QLineEdit):
         self.setCommandStyle(item,self.mode)
         self.showShortcut()
     
-    def jumpToPins(self,num):
-        pins_list = self.parent.manager.setActive(num)
-        self.parent.typing()
-        if not self.parent.results.isVisible() and pins_list:
-            widget = self.parent.results.widget
-            widget.populate(pins_list)
-            self.parent.results.show(len(pins_list))
-            self.pressDownKey()
-
+    def jumpToPins(self,num=0):
+        manager = self.parent.manager
+        if num:
+            pins_list = manager.setActive(num)
+            self.parent.typing()
+            if not self.parent.results.isVisible() and pins_list:
+                widget = self.parent.results.widget
+                widget.populate(pins_list)
+                self.parent.results.show(len(pins_list))
+                self.pressDownKey()
+        else:
+            btn = manager.group.checkedButton()
+            if not btn and not self.parent.results.isVisible():
+                pins_list = manager.getActive()
+                widget = self.parent.results.widget
+                widget.populate(pins_list)
+                self.parent.results.show(len(pins_list))
+                self.pressDownKey()
             
     def jumpToShortcut(self,num):
         if self.shortcut.has_key(num):
@@ -592,7 +607,8 @@ class SearchEdit(utils.QLineEdit):
                 item.exec_()
                 self.parent.hide()
             except:
-                pass
+                import traceback
+                traceback.print_exc()
 
     def showShortcut(self):
         scroll = self.results.widget.scrollArea.verticalScrollBar()

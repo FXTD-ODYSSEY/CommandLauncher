@@ -227,16 +227,19 @@ class ManagerMenu(utils.QMenu):
             self.active = btn.text()
             
             # get pins
-            pins_list = []
-            pinned = pins.get().get(self.active) or []
-            for _, v in commands.get().iteritems():
-                if v.get("hierarchy") in pinned:           
-                    v["pin"] = True
-                    pins_list.append(v)
-                else:                                             
-                    v["pin"] = False
-            return pins_list
-                
+            return self.getActive()
+
+    def getActive(self):
+        pins_list = []
+        pinned = pins.get().get(self.active) or []
+        for _, v in commands.get().iteritems():
+            if v.get("hierarchy") in pinned:           
+                v["pin"] = True
+                pins_list.append(v)
+            else:                                             
+                v["pin"] = False
+        return pins_list
+                    
     # --------------------------------------------------------------------
     
     @property    
