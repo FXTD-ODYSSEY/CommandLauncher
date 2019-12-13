@@ -212,29 +212,30 @@ class ManagerMenu(utils.QMenu):
                 return
         else:
             btn = self.group.checkedButton()
-            if not btn:
-                self.active = None
-                for _, v in commands.get().iteritems():
-                    v["pin"] = False
-                return
             
-        # set active
-        for button in self.group.buttons():
-            if button != btn:
-                button.setChecked(False)
-
-        self.active = btn.text()
-        
-        # get pins
-        pins_list = []
-        pinned = pins.get().get(self.active) or []
-        for _, v in commands.get().iteritems():
-            if v.get("hierarchy") in pinned:           
-                v["pin"] = True
-                pins_list.append(v)
-            else:                                             
+        if not btn or self.active == btn.text():
+            self.active = None
+            for _, v in commands.get().iteritems():
                 v["pin"] = False
-        return pins_list
+            return
+        else:
+            # set active
+            for button in self.group.buttons():
+                if button != btn:
+                    button.setChecked(False)
+
+            self.active = btn.text()
+            
+            # get pins
+            pins_list = []
+            pinned = pins.get().get(self.active) or []
+            for _, v in commands.get().iteritems():
+                if v.get("hierarchy") in pinned:           
+                    v["pin"] = True
+                    pins_list.append(v)
+                else:                                             
+                    v["pin"] = False
+            return pins_list
                 
     # --------------------------------------------------------------------
     

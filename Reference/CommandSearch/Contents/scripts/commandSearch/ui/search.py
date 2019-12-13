@@ -377,7 +377,8 @@ class SearchEdit(utils.QLineEdit):
         self.count = self.results.widget.layout.count() - 1
         if self.count < 1:
             return super(SearchEdit,self).keyPressEvent(event)
-            
+        
+        # NOTE 快捷键显示
         if key == utils.Qt.Key_Control:
             for _,[item,_] in self.shortcut.items():
                 shortcut = item.shortcut.text()
@@ -396,7 +397,6 @@ class SearchEdit(utils.QLineEdit):
             item = self.currentItem()
             self.setCommandStyle(item)
         
-        self.scrollBar = self.results.widget.scrollArea.verticalScrollBar()
         # NOTE 按上箭头
         if key == utils.Qt.Key_Up:
             self.pressUpKey()
@@ -415,20 +415,7 @@ class SearchEdit(utils.QLineEdit):
 
         # NOTE 点击 Enter 或 Return 键
         elif (key == utils.Qt.Key_Enter or key == utils.Qt.Key_Return)and self.selected != 0 and self.results.isVisible():
-            # item = self.currentItem()
-            if self.mode == 0:
-                item.exec_()
-                self.parent.hide()
-
-            elif self.mode == 1:
-                item.execOption_()
-                self.parent.hide()
-            elif self.mode == -1:
-                if item.info["pin"]:
-                    item.setUnpin()
-                else:
-                    item.setPin()
-                self.setCommandStyle(item,self.mode)
+            self.pressEnterKey()
             
 
         # # NOTE 点击 ` 键 打开菜单
@@ -497,6 +484,22 @@ class SearchEdit(utils.QLineEdit):
             
         else:
             return super(SearchEdit,self).keyPressEvent(event)
+    
+    def pressEnterKey(self):
+        item = self.currentItem()
+        if self.mode == 0:
+            item.exec_()
+            self.parent.hide()
+
+        elif self.mode == 1:
+            item.execOption_()
+            self.parent.hide()
+        elif self.mode == -1:
+            if item.info["pin"]:
+                item.setUnpin()
+            else:
+                item.setPin()
+            self.setCommandStyle(item,self.mode)
 
     def pressRightKey(self):
         item = self.currentItem()
@@ -557,7 +560,7 @@ class SearchEdit(utils.QLineEdit):
     def jumpToPins(self,num):
         pins_list = self.parent.manager.setActive(num)
         self.parent.typing()
-        if not self.parent.results.isVisible():
+        if not self.parent.results.isVisible() and pins_list:
             widget = self.parent.results.widget
             widget.populate(pins_list)
             self.parent.results.show(len(pins_list))
