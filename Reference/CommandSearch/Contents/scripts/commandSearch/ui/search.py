@@ -239,7 +239,7 @@ class SearchWidget(utils.QWidget):
 
         # NOTE 默认只显示 100 个结果提高搜索效率
         if self.search.display_num:
-            matches = matches[:self.search.display_num] if len(matches) > 100 else matches
+            matches = matches[:self.search.display_num] if len(matches) > self.search.display_num else matches
 
         # add commands
         widget = self.results.widget
@@ -396,65 +396,22 @@ class SearchEdit(utils.QLineEdit):
             item = self.currentItem()
             self.setCommandStyle(item)
         
-        scroll = self.results.widget.scrollArea.verticalScrollBar()
+        self.scrollBar = self.results.widget.scrollArea.verticalScrollBar()
         # NOTE 按上箭头
         if key == utils.Qt.Key_Up:
-            self.selected -= 1
-            if self.selected <= 0:
-                self.selected = 0
-                self.setFocus()
-                self.update()
-                return
-
-            item = self.currentItem()
-            item.setStyleSheet("color:coral")
-
-            # NOTE 设置滚动值
-            if self.selected > self.scroll_start:
-                height = self.scrollHeight()
-                scroll.setValue(height)
-            else:
-                scroll.setValue(0)
-
-            self.setCommandStyle(item,self.mode)
-            self.showShortcut()
-            print item.info.get("name")
+            self.pressUpKey()
 
         # NOTE 按下箭头
         elif key == utils.Qt.Key_Down:
-            self.selected += 1
-            self.selected = self.selected % self.count
-
-            item = self.currentItem(False)
-
-            # NOTE 设置滚动值
-            if self.selected > self.scroll_start:
-                height = self.scrollHeight()
-                scroll.setValue(height)
-            else:
-                scroll.setValue(0)
-
-            self.setCommandStyle(item,self.mode)
-            self.showShortcut()
-            print item.info.get("name")
-
+            self.pressDownKey()
+            
         # NOTE 按左箭头
         elif key == utils.Qt.Key_Left and self.selected != 0:
-            self.mode -= 1
-            self.mode = -1 if self.mode < -1 else self.mode
-
-            self.setCommandStyle(item,self.mode)
-            print "left",self.mode,item.info.get("name")
+            self.pressLeftKey()
 
         # NOTE 按右箭头
         elif key == utils.Qt.Key_Right and self.selected != 0:
-            self.mode += 1
-            self.mode = 1 if self.mode > 1 else self.mode
-            if self.mode == 1 and not item.commandOption:
-                self.mode = 0
-            
-            self.setCommandStyle(item,self.mode)
-            print "right",self.mode,item.info.get("name")
+            self.pressRightKey()
 
         # NOTE 点击 Enter 或 Return 键
         elif (key == utils.Qt.Key_Enter or key == utils.Qt.Key_Return)and self.selected != 0 and self.results.isVisible():
@@ -541,11 +498,72 @@ class SearchEdit(utils.QLineEdit):
         else:
             return super(SearchEdit,self).keyPressEvent(event)
 
+    def pressRightKey(self):
+        item = self.currentItem()
+        self.mode += 1
+        self.mode = 1 if self.mode > 1 else self.mode
+        if self.mode == 1 and not item.commandOption:
+            self.mode = 0
+        
+        self.setCommandStyle(item,self.mode)
+        
+    def pressLeftKey(self):
+        item = self.currentItem()
+        
+        self.mode -= 1
+        self.mode = -1 if self.mode < -1 else self.mode
+        self.setCommandStyle(item,self.mode)
+        
+    def pressUpKey(self):
+        self.scrollBar = self.results.widget.scrollArea.verticalScrollBar()
+        self.selected -= 1
+        if self.selected <= 0:
+            self.selected = 0
+            self.setFocus()
+            self.update()
+            return
+
+        item = self.currentItem()
+        item.setStyleSheet("color:coral")
+
+        # NOTE 设置滚动值
+        if self.selected > self.scroll_start:
+            height = self.scrollHeight()
+            self.scrollBar.setValue(height)
+        else:
+            self.scrollBar.setValue(0)
+
+        self.setCommandStyle(item,self.mode)
+        self.showShortcut()
+    
+    def pressDownKey(self):
+        self.scrollBar = self.results.widget.scrollArea.verticalScrollBar()
+        self.count = self.results.widget.layout.count() - 1
+        self.selected += 1
+        self.selected = self.selected % self.count
+
+        item = self.currentItem(False)
+
+        # NOTE 设置滚动值
+        if self.selected > self.scroll_start:
+            height = self.scrollHeight()
+            self.scrollBar.setValue(height)
+        else:
+            self.scrollBar.setValue(0)
+
+        self.setCommandStyle(item,self.mode)
+        self.showShortcut()
     
     def jumpToPins(self,num):
-        self.parent.manager.setActive(num)
+        pins_list = self.parent.manager.setActive(num)
         self.parent.typing()
-    
+        if not self.parent.results.isVisible():
+            widget = self.parent.results.widget
+            widget.populate(pins_list)
+            self.parent.results.show(len(pins_list))
+            self.pressDownKey()
+
+            
     def jumpToShortcut(self,num):
         if self.shortcut.has_key(num):
             item,index = self.shortcut[num]

@@ -56,6 +56,7 @@ class ManagerMenu(utils.QMenu):
         self.setting = SettingWindow(self)
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
         self.populate()
+        self.pins =  pins.read()
         
         
     # ------------------------------------------------------------------------
@@ -199,6 +200,10 @@ class ManagerMenu(utils.QMenu):
         """
         Switch active pin set to checked radio button.
         """
+        names = pins.get().keys()
+        if not names:
+            return
+        
         if num:
             buttons = self.group.buttons()
             if len(buttons) >= num:
@@ -207,26 +212,29 @@ class ManagerMenu(utils.QMenu):
                 return
         else:
             btn = self.group.checkedButton()
-            
-        if not btn:
-            self.active = None
-            for _, v in commands.get().iteritems():
-                v["pin"] = False
-        else :
-            # set active
-            for button in self.group.buttons():
-                if button != btn:
-                    button.setChecked(False)
-
-            self.active = btn.text()
-            
-            # get pins
-            pinned = pins.get().get(self.active) or []
-            for _, v in commands.get().iteritems():
-                if v.get("hierarchy") in pinned:           
-                    v["pin"] = True
-                else:                                             
+            if not btn:
+                self.active = None
+                for _, v in commands.get().iteritems():
                     v["pin"] = False
+                return
+            
+        # set active
+        for button in self.group.buttons():
+            if button != btn:
+                button.setChecked(False)
+
+        self.active = btn.text()
+        
+        # get pins
+        pins_list = []
+        pinned = pins.get().get(self.active) or []
+        for _, v in commands.get().iteritems():
+            if v.get("hierarchy") in pinned:           
+                v["pin"] = True
+                pins_list.append(v)
+            else:                                             
+                v["pin"] = False
+        return pins_list
                 
     # --------------------------------------------------------------------
     
