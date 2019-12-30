@@ -105,6 +105,9 @@ class SearchWidget(utils.QWidget):
         app = utils.QApplication.instance()
         app.installEventFilter(self)
 
+        # NOTE 填充底色 https://stackoverflow.com/questions/29762651/autodesk-maya-model-panel-resize-event
+        self.setAutoFillBackground(True)
+
 
     # ------------------------------------------------------------------------
 
@@ -190,13 +193,14 @@ class SearchWidget(utils.QWidget):
 
         return False   
     
-    def paintEvent(self,event):
-        # NOTE 填充底色，避免背景错乱
-        painter=utils.QPainter()
-        painter.begin(self)
-        painter.fillRect(event.rect(),utils.QColor('#444444'))
-        painter.end()
-        return super(SearchWidget,self).paintEvent(event)
+    # def paintEvent(self,event):
+    #     # NOTE 填充底色，避免背景错乱
+    #     painter=utils.QPainter()
+    #     painter.begin(self)
+    #     painter.fillRect(event.rect(),utils.QColor('#444444'))
+    #     painter.end()
+    #     return super(SearchWidget,self).paintEvent(event)
+    
     # ------------------------------------------------------------------------
 
     def typing(self):
