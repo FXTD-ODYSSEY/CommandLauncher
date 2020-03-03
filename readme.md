@@ -21,4 +21,11 @@ CommandLauncher Maya 命令启动器
 
 > &emsp;&emsp;最初
 
+## todolist
 
+- [x] 用i18n替换之前的手动替换语言方式
+- [x] 修改 menu 名称
+- [ ] 添加状态图标就到 status line
+- [ ] 通过多线程优化加载
+- [ ] 将 quicklauncher 的功能集成
+- [ ] 完善文章总结&md说明

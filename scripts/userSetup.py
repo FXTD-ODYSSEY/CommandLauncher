@@ -1,5 +1,7 @@
 import maya.cmds as cmds
+import commandLauncher
 
 if not cmds.about(batch=True):
-    import commandSearch
-    cmds.evalDeferred(commandSearch.setup)
+    # commandLauncher.clean()
+    cmds.evalDeferred(commandLauncher.setup)
+

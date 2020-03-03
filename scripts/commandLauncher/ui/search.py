@@ -39,7 +39,7 @@ class SearchWidget(utils.QWidget):
             self.menu_list = commands.getMenuList()
         
         # NOTE variable
-        self.setObjectName("CMDSearch")
+        self.setObjectName("CommandLuancherSearchWidget")
         
         # NOTE create layout
         layout = utils.QHBoxLayout(self)
@@ -241,8 +241,8 @@ class SearchWidget(utils.QWidget):
         # filter commands
         matches = commands.filter(search)
 
-        if self.search.filter:
-            matches = filter(lambda x: x["category"] == self.search.filter, matches)
+        if self.search.filter_mode:
+            matches = filter(lambda x: x["category"] == self.search.filter_mode, matches)
 
         # NOTE 默认只显示 100 个结果提高搜索效率
         if self.search.display_num:
@@ -306,12 +306,28 @@ class SearchEdit(utils.QLineEdit):
         self.mode = 0
         
         self.shortcut = {}
-        self.filter = ""
+        self.filter_mode = ""
+        self.filter_label = {
+            "cmds"  : lambda:utils.QApplication.translate('filter','cmds'),
+            "menu"  : lambda:utils.QApplication.translate('filter','menu'),
+            "shelf" : lambda:utils.QApplication.translate('filter','shelf'),
+        }
 
         self.scroll_start = 3
         self.scroll_locked = 4
         self.shortcut_num = 8
         self.display_num = 100
+    
+    def changeEvent(self, event):
+        if event.type() == utils.QEvent.LanguageChange:
+            self.retranslateUi()
+        super(SearchEdit, self).changeEvent(event)
+
+    def retranslateUi(self):
+        filter = self.parent.filter
+        print "self.filter_mode",self.filter_mode
+        if self.filter_mode in self.filter_label:
+            filter.setText(self.filter_label[self.filter_mode]())
 
     # -----------------------------------------------------------------------
     def filterDisplay(self,mode):
@@ -322,14 +338,17 @@ class SearchEdit(utils.QLineEdit):
         mode : str
             模式名称
         """
+        if mode not in self.filter_label:
+            return 
+
         filter_label = self.parent.filter
         if mode == filter_label.text() and filter_label.isVisible():
             filter_label.hide()
-            self.filter = ""
+            self.filter_mode = ""
         else:
             filter_label.show()
-            self.filter = mode
-            filter_label.setText(mode)
+            self.filter_mode = mode
+            self.retranslateUi()
         self.parent.process(4)
             
     def mouseReleaseEvent(self, e): 
@@ -344,11 +363,11 @@ class SearchEdit(utils.QLineEdit):
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         # print "key",key
         
-        # NOTE 阻断 ctrl 键实现打字法任意切换
-        if key == utils.Qt.Key_Control:
-            return
+        # # NOTE 阻断 ctrl 键实现打字法任意切换
+        # if key == utils.Qt.Key_Control:
+        #     return
         # NOTE 点击 shfit 键 不会导致失焦
-        elif key == utils.Qt.Key_Shift:
+        if key == utils.Qt.Key_Shift:
             return
         # NOTE 开启 menu 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+Q"):
@@ -578,6 +597,7 @@ class SearchEdit(utils.QLineEdit):
                 self.parent.results.show(len(pins_list))
                 self.pressDownKey()
         else:
+            if not hasattr(manager,"group"):return
             btn = manager.group.checkedButton()
             if not btn and not self.parent.results.isVisible():
                 pins_list = manager.getActive()

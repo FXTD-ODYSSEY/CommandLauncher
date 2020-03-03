@@ -15,8 +15,8 @@ import json
 import locale
 import webbrowser
 
-DIR = os.path.dirname(os.path.dirname(__file__))
-INSTRUNCTION_PATH = "file:///%s" % os.path.join(DIR,"instruction","README.html")
+DIR = os.path.dirname(__file__)
+INSTRUNCTION_PATH = "file:///%s" % os.path.join(os.path.dirname(DIR),"instruction","README.html")
 
 class ManagerMenu(utils.QMenu):
     """
@@ -368,19 +368,11 @@ class SettingWindow_UI(object):
         self.Shortcut_SP.setMaximum(9)
         self.Shortcut_SP.setObjectName("Shortcut_SP")
         self.gridLayout.addWidget(self.Shortcut_SP, 3, 1, 1, 1)
-        self.comboBox = utils.QComboBox(Form)
-        self.comboBox.setObjectName("comboBox")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.gridLayout.addWidget(self.comboBox, 0, 1, 1, 3)
+        self.Lang_Combo = utils.QComboBox(Form)
+        self.Lang_Combo.setObjectName("Lang_Combo")
+        self.gridLayout.addWidget(self.Lang_Combo, 0, 1, 1, 3)
 
-        self.retranslateUi(Form)
         utils.QMetaObject.connectSlotsByName(Form)
-
-    def retranslateUi(self, Form):
-        Form.setWindowTitle("Form")
-        self.comboBox.setItemText(0, "English")
-        self.comboBox.setItemText(1, u"中文")
 
 class SettingWindow(utils.QWidget,SettingWindow_UI):
     
@@ -402,10 +394,6 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.search = menu.parent.search
         self.setupMenu()
         
-        # NOTE 获取当前系统的语言
-        self.translateText(-1)
-        self.comboBox.currentIndexChanged.connect(self.translateText)
-        
         # NOTE 获取当前设置
         scroll_start = self.search.scroll_start
         self.Scroll_Start_SP.setValue(scroll_start)
@@ -426,7 +414,21 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             self.importJsonSetting(self.SETTING_PATH)
 
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
-      
+
+        # NOTE 设置语言菜单
+        self.__lang_list = {}
+        self.trans = utils.QTranslator(self)
+
+        self.localeList = {
+            "zh_CN":u"中文",
+            "en_US":u"English",
+        }
+
+        self.Lang_Combo.currentIndexChanged.connect(self.translateText)
+
+        # NOTE 设置名称
+        self.retranslateUi()
+    
     def setupMenu(self):
         self.menuBar = utils.QMenuBar(self)
         self.edit_menu = utils.QMenu(u'编辑',self)
@@ -453,70 +455,33 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.help_action = utils.QAction(u'使用说明', self)    
         self.help_menu.addAction(self.help_action)
         
-        
         self.help_action.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
-            
-    def translateText(self,index):
-        lang = ""
-        if index == -1:
-            lang,_ = locale.getdefaultlocale()
-        elif index == 0:
-            lang = "en_US"
-        elif index == 1:
-            lang = "zh_CN"
-
-        if lang == "zh_CN":
-            self.comboBox.setCurrentIndex(1)
-            self.edit_menu_text  = u'编辑'
-            self.import_text     = u'导入设置'
-            self.export_text     = u'导出设置'
-            self.reset_text      = u'重置设置'
-            self.close_text      = u'关闭'
-            self.help_menu_text  = u'帮助'
-            self.help_text       = u'使用说明'
-
-            self.Scroll_Lock     = u"滚动锁定行"
-            self.Languge         = u"语言模式"
-            self.Display         = u"命令显示数量"
-            self.Scroll_Start    = u"开始滚动行"
-            self.Shortcut        = u"快捷键显示数量"
-            self.Title           = u"命令启动器 - 设定窗口"
-            
-            self.pins_div        = u"固定"
-            self.sets_div        = u"置顶集"
-            self.sets_add        = u"添加"
-            self.sets_clear      = u"清空"
-            self.sets_delete     = u"删除"
-            self.command_div     = u"命令"
-            self.command_refresh = u"刷新"
-            self.command_setting = u"设置"
-            self.command_help    = u"帮助"
-        else:
-            self.comboBox.setCurrentIndex(0)
-            self.edit_menu_text  = u'Edit'
-            self.import_text     = u'Import'
-            self.export_text     = u'Export'
-            self.reset_text      = u'Reset'
-            self.close_text      = u'Close'
-            self.help_menu_text  = u'Help'
-            self.help_text       = u'Documentation'
-            
-            self.Scroll_Lock     = u"scroll lock line"
-            self.Languge         = u"Language Mode"
-            self.Display         = u"item display num"
-            self.Scroll_Start    = u"scroll start line"
-            self.Shortcut        = u"shortcut number"
-            self.Title           = u"CommandLauncher - SettingWindow"
-            
-            self.pins_div        = u"Pins"
-            self.sets_div        = u"Sets"
-            self.sets_add        = u"Add"
-            self.sets_clear      = u"Clear"
-            self.sets_delete     = u"Delete"
-            self.command_div     = u"Commands"
-            self.command_refresh = u"Refresh"
-            self.command_setting = u"Setting"
-            self.command_help    = u"Help"
+    
+    def retranslateUi(self):
+        self.edit_menu_text  = utils.QApplication.translate('menu','Edit')
+        self.import_text     = utils.QApplication.translate('menu','Import')
+        self.export_text     = utils.QApplication.translate('menu','Export')
+        self.reset_text      = utils.QApplication.translate('menu','Reset')
+        self.close_text      = utils.QApplication.translate('menu','Close')
+        self.help_menu_text  = utils.QApplication.translate('menu','Help')
+        self.help_text       = utils.QApplication.translate('menu','Documentation')
+        
+        self.Scroll_Lock     = utils.QApplication.translate('setting',"scroll lock line")
+        self.Languge         = utils.QApplication.translate('setting',"Language Mode")
+        self.Display         = utils.QApplication.translate('setting',"item display num")
+        self.Scroll_Start    = utils.QApplication.translate('setting',"scroll start line")
+        self.Shortcut        = utils.QApplication.translate('setting',"shortcut number")
+        self.Title           = utils.QApplication.translate('setting',"CommandLauncher - SettingWindow")
+        
+        self.pins_div        = utils.QApplication.translate('sets',"Pins")
+        self.sets_div        = utils.QApplication.translate('sets',"Sets")
+        self.sets_add        = utils.QApplication.translate('sets',"Add")
+        self.sets_clear      = utils.QApplication.translate('sets',"Clear")
+        self.sets_delete     = utils.QApplication.translate('sets',"Delete")
+        self.command_div     = utils.QApplication.translate('command',"Commands")
+        self.command_refresh = utils.QApplication.translate('command',"Refresh")
+        self.command_setting = utils.QApplication.translate('command',"Setting")
+        self.command_help    = utils.QApplication.translate('command',"Help")
         
         self.edit_menu.setTitle             ( self.edit_menu_text   )
         self.import_json_action.setText     ( self.import_text      )
@@ -544,10 +509,45 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.menu.command_refresh_text = self.command_refresh  
         self.menu.command_setting_text = self.command_setting  
         self.menu.command_help_text    = self.command_help 
+
+    @property
+    def localeList(self):
+        return self.__lang_list
+    
+    @localeList.setter
+    def localeList(self,value):
+        if type(value) != dict:
+            return
+        self.__lang_list = value
         
-        if index != -1:
-            self.exportJsonSetting(self.SETTING_PATH)
-         
+        system_lang = utils.QLocale.system().name()
+        i18n_folder = os.path.join(DIR,"i18n")
+        for i,(name,label) in enumerate(self.__lang_list.items()):
+            qm_file = os.path.join(i18n_folder,"%s.qm" % name)
+            qm_file = qm_file if os.path.exists(qm_file) else None
+            self.Lang_Combo.addItem(label)
+            self.Lang_Combo.setItemData(i, qm_file)
+            # NOTE 判断系统语言进行注册
+            if system_lang == name:
+                self.i18nInstall(qm_file)
+                self.Lang_Combo.setCurrentIndex(i)
+
+    def i18nInstall(self,qm_path):
+        if qm_path and os.path.exists(qm_path):
+            self.trans.load(qm_path)
+            utils.QApplication.instance().installTranslator(self.trans)
+        else:
+            utils.QApplication.instance().removeTranslator(self.trans)
+
+    def changeEvent(self, event):
+        if event.type() == utils.QEvent.LanguageChange:
+            self.retranslateUi()
+        super(SettingWindow, self).changeEvent(event)
+
+    def translateText(self,index):
+        qm_file = self.Lang_Combo.itemData(index)
+        self.i18nInstall(qm_file)
+        self.exportJsonSetting(self.SETTING_PATH)
         
     def mayaShow(self):
         # NOTE 如果变量存在 就检查窗口多开
@@ -592,7 +592,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             self.setting_data = json.load(f,encoding="utf-8")
 
          # NOTE 获取当前设置
-        self.comboBox.setCurrentIndex  ( self.setting_data["comboBox"]        )
+        self.Lang_Combo.setCurrentIndex  ( self.setting_data["comboBox"]        )
         self.Scroll_Start_SP.setValue  ( self.setting_data["Scroll_Start_SP"] )
         self.Scroll_Lock_SP.setValue   ( self.setting_data["Scroll_Lock_SP"]  )
         self.Shortcut_SP.setValue      ( self.setting_data["Shortcut_SP"]     )
@@ -609,7 +609,7 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
             path,_ = utils.QFileDialog.getSaveFileName(self,filter= u"json (*.json)")
             if not path:return
         
-        self.setting_data["comboBox"]        = self.comboBox.currentIndex()
+        self.setting_data["comboBox"]        = self.Lang_Combo.currentIndex()
         self.setting_data["Scroll_Start_SP"] = self.Scroll_Start_SP.value()
         self.setting_data["Scroll_Lock_SP"]  = self.Scroll_Lock_SP.value()
         self.setting_data["Shortcut_SP"]     = self.Shortcut_SP.value()

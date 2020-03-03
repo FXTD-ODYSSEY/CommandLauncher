@@ -3,13 +3,24 @@ from .search import *
 from .manager import *
 from .results import *
 from .commands import *
-
+from . import utils
+from . import search
+from . import manager
+from . import results
+from . import commands
+reload(utils)
+reload(search)
+reload(manager)
+reload(results)
+reload(commands)
 
 # ----------------------------------------------------------------------------
 
 
-global COMMAND_SEARCH
-COMMAND_SEARCH = None
+# global COMMAND_SEARCH
+# COMMAND_SEARCH = None
+global COMMAND_LAUNCHER
+COMMAND_LAUNCHER = None
 
 
 # ----------------------------------------------------------------------------
@@ -41,7 +52,13 @@ def install():
     layout.addWidget(COMMAND_SEARCH)
 
 def setup(): 
-    clean()   
+
+    global COMMAND_LAUNCHER
+    
+    # validate timeline marker
+    if COMMAND_LAUNCHER:
+        raise RuntimeError("Command search is already installed!")
+
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
     COMMAND_LAUNCHER.setVisible(False)
     return COMMAND_LAUNCHER
@@ -50,3 +67,6 @@ def clean():
     for w in utils.mayaWindow().children():
         if str(type(w)) == str(SearchWidget):
             w.deleteLater()
+    global COMMAND_LAUNCHER
+    COMMAND_LAUNCHER = None
+    
