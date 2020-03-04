@@ -643,9 +643,11 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
 
 # ----------------------------------------------------------------------------
 
-class CommandLauncherIcon(utils.QPushButton):
+
+
+class CommandLauncherSwitch(utils.QPushButton):
     def __init__(self,parent=None):
-        super(CommandLauncherIcon,self).__init__(parent)
+        super(CommandLauncherSwitch,self).__init__(parent)
         self.setFlat(True)
         self.setFixedWidth(25)
         self.setFixedHeight(25)
@@ -670,7 +672,7 @@ class CommandLauncherIcon(utils.QPushButton):
     def changeEvent(self, event):
         if event.type() == utils.QEvent.LanguageChange:
             self.retranslateUi()
-        super(CommandLauncherIcon, self).changeEvent(event)
+        super(CommandLauncherSwitch, self).changeEvent(event)
 
     def toggleState(self):
         from . import setup,clean
@@ -721,3 +723,43 @@ class CommandLauncherIcon(utils.QPushButton):
                 pcolor = image.pixelColor(x, y)
                 image.setPixelColor(x, y, pcolor.darker())
         self.setIcon(utils.QIcon(utils.QPixmap.fromImage(image)))
+
+BAR_CLOSE_ICON = ":/closeBar.png"
+BAR_OPEN_ICON = ":/openBar.png"
+
+class CommandLauncherIcon(utils.QWidget):
+
+    def __init__(self,parent=None):
+        super(CommandLauncherIcon,self).__init__(parent)
+        
+        # create bar
+        self.bar = utils.QPushButton()
+        self.bar.setFlat(True)
+        self.bar.setFixedWidth(8)
+        self.bar.setFixedHeight(25)   
+        self.bar.setIcon(utils.QPixmap(BAR_CLOSE_ICON))
+        self.bar.setIconSize(utils.QSize(8,25))
+        self.bar.released.connect(self.switch)
+
+        self.button = CommandLauncherSwitch()
+
+        # create layout
+        layout = utils.QHBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(1)
+
+        layout.addWidget(self.bar)
+        layout.addWidget(self.button)
+
+    def switch(self):
+        """
+        Switch visibility of the widget, it is build in the same style as all
+        if the maya status line ui elements.
+        """
+        if self.button.isVisible():
+            self.button.setVisible(False)
+            self.bar.setIcon(utils.QPixmap(BAR_CLOSE_ICON))
+        else:
+            self.button.setVisible(True)
+            self.bar.setIcon(utils.QPixmap(BAR_OPEN_ICON))
+

@@ -10,8 +10,7 @@ from maya import mel
 from maya import cmds
 # ---------------------------------------------------------------------------
 
-BAR_CLOSE_ICON = ":/closeBar.png"
-BAR_OPEN_ICON = ":/openBar.png"
+
 WIDTH = 320
 
 # ---------------------------------------------------------------------------
@@ -106,7 +105,7 @@ class SearchWidget(utils.QWidget):
             self.menu_list = commands.store()
         else:
             self.menu_list = commands.getMenuList()
-            
+
         # NOTE add signals
         self.menu.aboutToClose.connect(self.closeMenuEvent)
         self.ResultsWindow.aboutToClose.connect(self.closeWindowEvent)
