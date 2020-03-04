@@ -276,19 +276,19 @@ def getShelfButton():
     """
     # NOTE 获取工具架名称
     gShelfTopLevel = mel.eval("$temp = $gShelfTopLevel")
-    shelves = cmds.shelfTabLayout(gShelfTopLevel,q=1,ca=1)
-    labels = cmds.shelfTabLayout(gShelfTopLevel,q=1,tl=1)
+    shelves = cmds.shelfTabLayout(gShelfTopLevel,query=1,ca=1)
+    labels = cmds.shelfTabLayout(gShelfTopLevel,query=1,tl=1)
     for i,[shelf,label] in enumerate(zip(shelves,labels),1):
         # NOTE 获取完整组件名称
-        shelf = cmds.shelfLayout(shelf,q=1,fpn=1)
-        if not loadShelf(i) and not cmds.shelfLayout(shelf,q=1,ca=1):
+        shelf = cmds.shelfLayout(shelf,query=1,fpn=1)
+        if not loadShelf(i) and not cmds.shelfLayout(shelf,query=1,ca=1):
             print "%s empty child" % shelf
             continue
-        for btn in cmds.shelfLayout(shelf,q=1,ca=1):
-            if cmds.shelfButton(btn,q=1,ex=1):
-                name = cmds.shelfButton(btn,q=1,label=1)
-                icon = cmds.shelfButton(btn,q=1,i=1)
-                # tooltip = cmds.shelfButton(btn,q=1,ann=1)
+        for btn in cmds.shelfLayout(shelf,query=1,ca=1):
+            if cmds.shelfButton(btn,query=1,ex=1):
+                name = cmds.shelfButton(btn,query=1,label=1)
+                icon = cmds.shelfButton(btn,query=1,i=1)
+                # tooltip = cmds.shelfButton(btn,query=1,ann=1)
                 
                 COMMANDS[name] = dict()
                 COMMANDS[name]["name"] = name
@@ -304,8 +304,8 @@ def getShelfButton():
                 # COMMANDS[name]["menu"] = menu_list[-1]
                 
                 # NOTE 点击运行的代码
-                command = cmds.shelfButton(btn,q=1,c=1)
-                command_type = cmds.shelfButton(btn,q=1,c=1,stp=1)
+                command = cmds.shelfButton(btn,query=1,c=1)
+                command_type = cmds.shelfButton(btn,query=1,c=1,stp=1)
                 if command_type.lower() == "mel":
                     # Note 运行双击的 mel 代码
                     COMMANDS[name]["cmd"]  = partial(mel.eval,command)
@@ -315,9 +315,9 @@ def getShelfButton():
 
                 
                 # NOTE 查询双击 shelf 状态
-                options = cmds.shelfButton(btn,q=1,dcc=1)
+                options = cmds.shelfButton(btn,query=1,dcc=1)
                 if options:
-                    options_type = cmds.shelfButton(btn,q=1,dcc=1,stp=1)
+                    options_type = cmds.shelfButton(btn,query=1,dcc=1,stp=1)
                     if options_type.lower() == "mel":
                         # Note 运行双击的 mel 代码
                         COMMANDS[name]["cmdOption"]  = partial(mel.eval,options)

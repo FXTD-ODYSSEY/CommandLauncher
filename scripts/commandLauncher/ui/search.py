@@ -32,14 +32,7 @@ class SearchWidget(utils.QWidget):
     def __init__(self, parent=None):
         utils.QWidget.__init__(self, parent)
         
-        # NOTE get commands
-        if not commands.get():
-            self.menu_list = commands.store()
-        else:
-            self.menu_list = commands.getMenuList()
         
-        # NOTE variable
-        self.setObjectName("CommandLuancherSearchWidget")
         
         # NOTE create layout
         layout = utils.QHBoxLayout(self)
@@ -67,40 +60,56 @@ class SearchWidget(utils.QWidget):
         
         # NOTE window
         self.ResultsWindow = results.ResultsWindow(self)
-        self.ResultsWindow.aboutToClose.connect(self.closeWindowEvent)
         
         # NOTE menu
         self.menu = results.ResultsMenu(self)
-        self.menu.aboutToClose.connect(self.closeMenuEvent)
         
         self.results = self.menu
         
         self.search = SearchEdit(self, self.container,self.results)
         
         self.filter = utils.QLabel()
-        self.filter.hide()
-        self.filter.setStyleSheet("color:orange")
         
         # NOTE add widgets
         layout.addWidget(self.search_button)
         layout.addWidget(self.filter)
         layout.addWidget(self.search)
-          
-        # NOTE add signals
-        self.search.textChanged.connect(self.typing)
-        self.search.returnPressed.connect(self.enter)
 
         self.manager = manager.ManagerMenu(self)
-        self.search_button.setMenu(self.manager)
         
         # NOTE 添加计时器
         self.timer = utils.QTimer()
         self.timer_count = 0
         self.tab_long_press = 0
         self.timer.setInterval(100)
-        self.timer.timeout.connect(self.timerEvent)
 
         self.resize(WIDTH,25)
+
+        # NOTE get commands
+        if not commands.get():
+            self.menu_list = commands.store()
+        else:
+            self.menu_list = commands.getMenuList()
+        
+    # ------------------------------------------------------------------------
+    
+
+        # NOTE variable
+        self.setObjectName("CommandLuancherSearchWidget")
+
+        self.filter.hide()
+        self.filter.setStyleSheet("color:orange")
+
+        # NOTE add signals
+        self.menu.aboutToClose.connect(self.closeMenuEvent)
+        self.ResultsWindow.aboutToClose.connect(self.closeWindowEvent)
+
+        self.search.textChanged.connect(self.typing)
+        self.search.returnPressed.connect(self.enter)
+        
+        self.search_button.setMenu(self.manager)
+        self.timer.timeout.connect(self.timerEvent)
+
         # Note 初始化 Application 的事件
         app = utils.QApplication.instance()
         app.installEventFilter(self)
@@ -108,7 +117,9 @@ class SearchWidget(utils.QWidget):
         # NOTE 填充底色 https://stackoverflow.com/questions/29762651/autodesk-maya-model-panel-resize-event
         self.setAutoFillBackground(True)
 
-
+    def initialize(self):
+        pass
+        
     # ------------------------------------------------------------------------
 
     def timerEvent(self):
@@ -273,7 +284,7 @@ class SearchWidget(utils.QWidget):
         
     def closeMenuEvent(self):
         self.results.hide()
-        self.results = self.window
+        self.results = self.ResultsWindow
         
         self.typing()
 
@@ -325,7 +336,6 @@ class SearchEdit(utils.QLineEdit):
 
     def retranslateUi(self):
         filter = self.parent.filter
-        print "self.filter_mode",self.filter_mode
         if self.filter_mode in self.filter_label:
             filter.setText(self.filter_label[self.filter_mode]())
 

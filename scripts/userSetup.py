@@ -1,7 +1,7 @@
 import maya.cmds as cmds
-import commandLauncher
 
 if not cmds.about(batch=True):
+    import commandLauncher
     # commandLauncher.clean()
-    cmds.evalDeferred(commandLauncher.setup)
+    cmds.evalDeferred(commandLauncher.install)
 

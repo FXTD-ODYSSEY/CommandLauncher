@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="zh_CN" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.1" language="zh_CN">
 <context>
     <name>command</name>
     <message>
@@ -21,6 +22,42 @@
         <location filename="../manager.py" line="493"/>
         <source>Help</source>
         <translation>帮助</translation>
+    </message>
+</context>
+<context>
+    <name>filter</name>
+    <message>
+        <location filename="../search.py" line="312"/>
+        <source>cmds</source>
+        <translation>cmds命令</translation>
+    </message>
+    <message>
+        <location filename="../search.py" line="313"/>
+        <source>menu</source>
+        <translation>菜单</translation>
+    </message>
+    <message>
+        <location filename="../search.py" line="314"/>
+        <source>shelf</source>
+        <translation>工具架</translation>
+    </message>
+</context>
+<context>
+    <name>icon</name>
+    <message>
+        <location filename="../manager.py" line="698"/>
+        <source>CommandLauncher</source>
+        <translation>命令启动器</translation>
+    </message>
+    <message>
+        <location filename="../manager.py" line="699"/>
+        <source>OFF</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location filename="../manager.py" line="699"/>
+        <source>ON</source>
+        <translation>启动</translation>
     </message>
 </context>
 <context>

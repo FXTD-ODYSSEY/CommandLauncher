@@ -103,7 +103,6 @@ def findSearchIcon():
     paths = []
     if os.environ.get("XBMLANGPATH"):
         paths = os.environ.get("XBMLANGPATH").split(os.pathsep)
-    paths.append(os.path.join(os.path.split(__file__)[0], "icons"))
 
     # find icon
     for path in paths:

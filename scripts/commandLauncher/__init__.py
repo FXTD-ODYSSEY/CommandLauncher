@@ -1,8 +1,6 @@
 """			
 Command Launcher
 """
-from . import ui
-reload(ui)
 from .ui import install,setup,clean
 from .hotkey import *
 

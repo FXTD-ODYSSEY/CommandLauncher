@@ -564,8 +564,8 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
         self.ptr.resize(0,0)
         
     def _close(self):
-        # NOTE 脱离要删除的窗口 | 由于自身依附在 ManagerMenu 上 因此不会被垃圾回收
-        self.setParent(utils.mayaWindow())
+        # NOTE 彻底删除窗口
+        self.setParent(None)
 
     def mayaToQT( self,name ):
         # Maya -> QWidget
@@ -640,3 +640,84 @@ class SettingWindow(utils.QWidget,SettingWindow_UI):
     def shortcut(self,value):
         self.search.shortcut_num = value
         self.exportJsonSetting(self.SETTING_PATH)
+
+# ----------------------------------------------------------------------------
+
+class CommandLauncherIcon(utils.QPushButton):
+    def __init__(self,parent=None):
+        super(CommandLauncherIcon,self).__init__(parent)
+        self.setFlat(True)
+        self.setFixedWidth(25)
+        self.setFixedHeight(25)
+
+        # NOTE 默认开启
+        self.setIconColor()
+
+        self.lancher_state = True
+
+        self.menu = utils.QMenu()
+        self.setMenu(self.menu)
+
+        self.divider = utils.Divider(self,"")
+        self.add(self.divider)
+
+        self.State_BTN = utils.QPushButton()
+        self.State_BTN.clicked.connect(self.toggleState)
+        self.add(self.State_BTN)
+        
+        self.retranslateUi()
+
+    def changeEvent(self, event):
+        if event.type() == utils.QEvent.LanguageChange:
+            self.retranslateUi()
+        super(CommandLauncherIcon, self).changeEvent(event)
+
+    def toggleState(self):
+        from . import setup,clean
+        self.lancher_state = not self.lancher_state
+
+        if self.lancher_state:
+            setup()
+            self.setIconColor()
+        else:
+            clean()
+            self.setDarkColor()
+
+        self.retranslateUi()
+
+    def retranslateUi(self):
+        self.divider.setText(utils.QApplication.translate('icon','CommandLauncher'))
+        text = utils.QApplication.translate('icon','OFF') if self.lancher_state else utils.QApplication.translate('icon','ON')
+        self.State_BTN.setText(text)
+
+    def add(self, widget):
+        """
+        Add widget to a QWidgetAction and add it to the menu.
+        
+        :param QWidget widget: widget to be added to the menu
+        """
+        action = utils.QWidgetAction(self)
+        action.setDefaultWidget(widget)
+        self.menu.addAction(action)
+
+    def setIconColor(self):
+        self.setIcon(utils.findSearchIcon())
+        self.setIconSize(utils.QSize(25,25))  
+
+    def setDarkColor(self,size=25):
+        """setButtonColor set Icon Color
+        # NOTE https://stackoverflow.com/questions/53107173/change-color-png-image-qpushbutton
+        Parameters
+        size : int, optional
+            icon size, by default 25
+        """
+        
+        icon = self.icon()
+        pixmap = icon.pixmap(size)
+        image = pixmap.toImage()
+        pcolor = image.pixelColor(size,size)
+        for x in range(image.width()):
+            for y in range(image.height()):
+                pcolor = image.pixelColor(x, y)
+                image.setPixelColor(x, y, pcolor.darker())
+        self.setIcon(utils.QIcon(utils.QPixmap.fromImage(image)))
