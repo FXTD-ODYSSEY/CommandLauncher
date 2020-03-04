@@ -5,7 +5,7 @@ from .manager import *
 from .results import *
 from .commands import *
 
-import threading
+
 # ----------------------------------------------------------------------------
 
 global COMMAND_SEARCH_ICON
@@ -25,7 +25,9 @@ def setup():
 
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
 
-    thread = threading.Thread(target=COMMAND_LAUNCHER.initialize)
+    import threading
+    from maya import cmds
+    thread = threading.Thread(target=lambda:cmds.evalDeferred(COMMAND_LAUNCHER.initialize))
     thread.start()
 
     return COMMAND_LAUNCHER
