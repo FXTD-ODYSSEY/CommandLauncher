@@ -317,10 +317,11 @@ class SearchEdit(utils.QLineEdit):
         
         self.shortcut = {}
         self.filter_mode = ""
-        self.filter_label = {
+        self.filter_label_dict = {
             "cmds"  : lambda:utils.QApplication.translate('filter','cmds'),
             "menu"  : lambda:utils.QApplication.translate('filter','menu'),
             "shelf" : lambda:utils.QApplication.translate('filter','shelf'),
+            "command" : lambda:utils.QApplication.translate('filter','command'),
         }
 
         self.scroll_start = 3
@@ -335,8 +336,9 @@ class SearchEdit(utils.QLineEdit):
 
     def retranslateUi(self):
         filter = self.parent.filter
-        if self.filter_mode in self.filter_label:
-            filter.setText(self.filter_label[self.filter_mode]())
+        if self.filter_mode in self.filter_label_dict:
+            text = self.filter_label_dict[self.filter_mode]()
+            filter.setText(text)
 
     # -----------------------------------------------------------------------
     def filterDisplay(self,mode):
@@ -347,11 +349,12 @@ class SearchEdit(utils.QLineEdit):
         mode : str
             模式名称
         """
-        if mode not in self.filter_label:
+        if mode not in self.filter_label_dict:
             return 
 
         filter_label = self.parent.filter
-        if mode == filter_label.text() and filter_label.isVisible():
+
+        if filter_label.isVisible() and self.filter_label_dict[mode]() == filter_label.text():
             filter_label.hide()
             self.filter_mode = ""
         else:
@@ -372,9 +375,9 @@ class SearchEdit(utils.QLineEdit):
         KeySequence = utils.QKeySequence(key+int(event.modifiers()))
         # print "key",key
         
-        # # NOTE 阻断 ctrl 键实现打字法任意切换
-        # if key == utils.Qt.Key_Control:
-        #     return
+        # NOTE 阻断 ctrl 键实现打字法任意切换
+        if key == utils.Qt.Key_Control:
+            return
         # NOTE 点击 shfit 键 不会导致失焦
         if key == utils.Qt.Key_Shift:
             return
@@ -387,6 +390,8 @@ class SearchEdit(utils.QLineEdit):
         # NOTE 开启 cmds 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+E"):
             return self.filterDisplay("cmds")
+        elif KeySequence == utils.QKeySequence("Ctrl+R"):
+            return self.filterDisplay("command")
          # NOTE 打开搜索菜单
         elif KeySequence == utils.QKeySequence("Ctrl+`"):
             return self.parent.manager.aboutToShow_()

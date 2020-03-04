@@ -27,35 +27,40 @@
 <context>
     <name>filter</name>
     <message>
-        <location filename="../search.py" line="312"/>
+        <location filename="../search.py" line="322"/>
         <source>cmds</source>
         <translation>cmds命令</translation>
     </message>
     <message>
-        <location filename="../search.py" line="313"/>
+        <location filename="../search.py" line="323"/>
         <source>menu</source>
         <translation>菜单</translation>
     </message>
     <message>
-        <location filename="../search.py" line="314"/>
+        <location filename="../search.py" line="324"/>
         <source>shelf</source>
         <translation>工具架</translation>
+    </message>
+    <message>
+        <location filename="../search.py" line="325"/>
+        <source>command</source>
+        <translation>Maya命令</translation>
     </message>
 </context>
 <context>
     <name>icon</name>
     <message>
-        <location filename="../manager.py" line="698"/>
+        <location filename="../manager.py" line="700"/>
         <source>CommandLauncher</source>
         <translation>命令启动器</translation>
     </message>
     <message>
-        <location filename="../manager.py" line="699"/>
+        <location filename="../manager.py" line="701"/>
         <source>OFF</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../manager.py" line="699"/>
+        <location filename="../manager.py" line="701"/>
         <source>ON</source>
         <translation>启动</translation>
     </message>

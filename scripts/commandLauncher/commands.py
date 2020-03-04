@@ -88,6 +88,7 @@ def filter(search):
 
     # matches.sort(key=lambda x:(-x["pin"], x["hierarchy"]))
     # NOTE https://github.com/csaez/quicklauncher/issues/12
+    # NOTE 排序最匹配的结果放到最上面
     ratio = lambda x, y: difflib.SequenceMatcher(None, x, y).ratio()
     matches.sort(key=lambda x: (x["pin"],ratio(x["name"], search)),reverse=True)
     return matches
@@ -222,16 +223,24 @@ def getItemOptionBox(item, name):
     COMMANDS[name]["cmdOption"]   = item
 
 def getCmdsMember():
+    from types import BuiltinFunctionType
+
     for (name, func) in inspect.getmembers(cmds, callable):
         COMMANDS[name] = dict()
         COMMANDS[name]["name"] = name
         COMMANDS[name]["pin"] = False
         COMMANDS[name]["icon"] = utils.QIcon()
-        COMMANDS[name]["group"] = "Maya Mel&cmds Module" 
         COMMANDS[name]["search"] = name
         COMMANDS[name]["hierarchy"] = name
         COMMANDS[name]["cmd"]  = func
-        COMMANDS[name]["category"] = "cmds"
+
+        # NOTE BuiltinFunction 为 cmds 的命令 | 其他的是 runtime Command 或者 一些插件引入的命令
+        if type(func) == BuiltinFunctionType:
+            COMMANDS[name]["group"] = "Maya cmds Module" 
+            COMMANDS[name]["category"] = "cmds"
+        else:
+            COMMANDS[name]["group"] = "Maya Command" 
+            COMMANDS[name]["category"] = "command"
 
 
 def loadShelf(index):
@@ -311,7 +320,7 @@ def getShelfButton():
                     COMMANDS[name]["cmd"]  = partial(mel.eval,command)
                 else:
                     # Note 运行双击的 python 代码
-                    COMMANDS[name]["cmd"]  = partial(lambda x:eval(compile(x, '<string>', 'exec')),command)
+                    COMMANDS[name]["cmd"]  = partial(lambda command:eval(compile(command, '<string>', 'exec')),command)
 
                 
                 # NOTE 查询双击 shelf 状态
