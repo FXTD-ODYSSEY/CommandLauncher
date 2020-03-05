@@ -2,9 +2,8 @@ import maya.cmds as cmds
 from textwrap import dedent
 
 if not cmds.about(batch=True):
-    import commandLauncher
-    # commandLauncher.clean()
     cmds.evalDeferred(dedent("""
+    import commandLauncher
     try:
         commandLauncher.install()
     except:

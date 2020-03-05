@@ -6,6 +6,7 @@ from .results import *
 from .commands import *
 
 from .statusIcon import CommandLauncherIcon
+from maya import cmds
 
 # ----------------------------------------------------------------------------
 
@@ -15,6 +16,17 @@ global COMMAND_LAUNCHER
 COMMAND_LAUNCHER = None
 
 # ----------------------------------------------------------------------------
+
+class Worker(QRunnable):
+
+    def __init__(self,func):
+        super(Worker,self).__init__()
+        self.func = func
+    def run(self):
+        '''
+        Initialise the runner function with passed args, kwargs.
+        '''
+        self.func()
 
 def setup(): 
 
@@ -26,12 +38,9 @@ def setup():
 
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
 
-    import threading
-    from maya import cmds
-    thread = threading.Thread(target=lambda:cmds.evalDeferred(COMMAND_LAUNCHER.initialize))
-    thread.start()
+    thread = QThreadPool()
+    thread.start(Worker(COMMAND_LAUNCHER.initialize))
 
-    return COMMAND_LAUNCHER
 
 def clean():
     for w in mayaWindow().children():
@@ -74,5 +83,4 @@ def install():
     layout.addWidget(COMMAND_SEARCH_ICON)
 
     # setup CommandLauncher
-    setup()
-
+    cmds.evalDeferred(setup)

@@ -20,6 +20,8 @@ from .ui.setting import SETTING_PATH
 from maya import cmds
 from maya import mel
 
+global COMMANDS
+COMMANDS = {}
 
 def get():
     """
@@ -33,17 +35,6 @@ def get():
         return {}
     return globals().get("COMMANDS")
 
-def getMenuList():
-    """
-    Get all registered commands from the global variable, if the global 
-    variable cannot be found an empty dictionary will be returned.
-    
-    :return: Commands data
-    :rtype: dict
-    """
-    if not "MENU_LIST" in globals().keys():
-        return {}
-    return globals().get("MENU_LIST")
     
 # ----------------------------------------------------------------------------
 
@@ -108,20 +99,25 @@ def store():
     to the commands variable.
     """
     # reset commands
-    global COMMANDS
     COMMANDS = {}
-    global MENU_LIST
-    MENU_LIST = []
+
+    import threading
 
     # loop menu bar
     menuBar = utils.mayaMenu()
-    MENU_LIST = _store(menuBar)
-    getShelfButton()
-    getCmdsMember()
-    getScripts()
+    _store(menuBar)
+
+    # NOTE  多线程加速
+    # menuThread = threading.Thread(target=_store,args=(menuBar,))
+    # menuThread.start()
+    shelfThread = threading.Thread(target=getShelfButton)
+    shelfThread.start()
+    cmdsThread = threading.Thread(target=getCmdsMember)
+    cmdsThread.start()
+    scriptThread = threading.Thread(target=getScripts)
+    scriptThread.start()
     
-    print "Search Commands: {0} buttons registered".format(len(COMMANDS))
-    return MENU_LIST
+    print "Command Launcher Item Updated "
     
 def _store(parent, parents=[], menu_list=[]):
     """
@@ -286,6 +282,12 @@ def loadShelf(index):
 
     return True    
       
+def loadShelves():
+    gShelfTopLevel = mel.eval("$temp = $gShelfTopLevel")
+    shelves = cmds.shelfTabLayout(gShelfTopLevel,query=1,ca=1)
+    for i,_ in enumerate(shelves,1):
+        loadShelf(i)
+
 def getShelfButton():
     """getShelfButton 
     
@@ -298,7 +300,7 @@ def getShelfButton():
     for i,[shelf,label] in enumerate(zip(shelves,labels),1):
         # NOTE 获取完整组件名称
         shelf = cmds.shelfLayout(shelf,query=1,fpn=1)
-        if not loadShelf(i) and not cmds.shelfLayout(shelf,query=1,ca=1):
+        if not cmds.shelfLayout(shelf,query=1,ca=1):
             print "%s empty child" % shelf
             continue
         for btn in cmds.shelfLayout(shelf,query=1,ca=1):

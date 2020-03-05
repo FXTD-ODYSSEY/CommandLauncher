@@ -9,11 +9,8 @@ from . import utils
 from .setting import SettingWindow
 from .. import commands, pins
 
-print "manager commands",commands
-
 from maya import cmds
 from maya import OpenMayaUI
-
 
 import os
 import json
@@ -51,18 +48,18 @@ class ManagerMenu(utils.QMenu):
         self.parent = parent
         self.active = None
         
+        self.setting = SettingWindow(self)
+        
+    def initialize(self):
         # menu
         self.setObjectName("PinMenu")
         self.setMinimumWidth(140)
         
         # connect
         self.aboutToShow.connect(self.aboutToShow_)
-        
-        self.setting = SettingWindow(self)
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
         self.populate()
         self.pins =  pins.read()
-        
         
     # ------------------------------------------------------------------------
                 

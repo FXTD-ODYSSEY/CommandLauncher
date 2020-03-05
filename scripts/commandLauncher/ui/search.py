@@ -82,10 +82,6 @@ class SearchWidget(utils.QWidget):
         self.tab_long_press = 0
         self.timer.setInterval(100)
 
-        self.resize(WIDTH,25)
-
-        
-        
         # Note 初始化 Application 的事件
         app = utils.QApplication.instance()
         app.installEventFilter(self)
@@ -93,18 +89,20 @@ class SearchWidget(utils.QWidget):
         # NOTE variable
         self.setObjectName("CommandLuancherSearchWidget")
 
-         # NOTE 填充底色 https://stackoverflow.com/questions/29762651/autodesk-maya-model-panel-resize-event
-        self.setAutoFillBackground(True)
-
+        commands.loadShelves()
+        if not commands.get():
+            self.menu_list = commands.store()
+        
     # ------------------------------------------------------------------------
     
     def initialize(self):
+        
+        self.manager.initialize()
+        
+        self.resize(WIDTH,25)
 
-        # NOTE get commands
-        if not commands.get():
-            self.menu_list = commands.store()
-        else:
-            self.menu_list = commands.getMenuList()
+        # NOTE 填充底色 https://stackoverflow.com/questions/29762651/autodesk-maya-model-panel-resize-event
+        self.setAutoFillBackground(True)
 
         # NOTE add signals
         self.menu.aboutToClose.connect(self.closeMenuEvent)
@@ -118,7 +116,7 @@ class SearchWidget(utils.QWidget):
 
         self.filter.hide()
         self.filter.setStyleSheet("color:orange")
-
+        
     # ------------------------------------------------------------------------
 
     def timerEvent(self):

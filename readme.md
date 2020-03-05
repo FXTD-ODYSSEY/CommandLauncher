@@ -19,7 +19,7 @@ CommandLauncher Maya 命令启动器
 > &emsp;&emsp;后来，还是因为 mGear 提到的一些插件，于是去 Autodesk 官方的商店查找工具。
 > &emsp;&emsp;在那里我找到了另一个UI做得非常棒的工具 [CommandSearch](https://apps.autodesk.com/MAYA/en/Detail/Index?id=3148420959640138602)
 
-> &emsp;&emsp;最初
+> &emsp;&emsp;最初是接触 3dsMax 和 Houdini 都相关的搜索框，而 Maya 的命令搜索功能非常落后。
 
 ## todolist
 
