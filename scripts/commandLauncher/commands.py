@@ -7,12 +7,18 @@ __date__ = '2019-12-07 14:33:16'
 
 import re
 import os
+import sys
+import json
 import inspect
+import difflib
+from functools import partial
+from importlib import import_module
+
+from .ui import utils
+from .ui.setting import SETTING_PATH
+
 from maya import cmds
 from maya import mel
-from functools import partial
-from .ui import utils
-import difflib
 
 
 def get():
@@ -112,6 +118,7 @@ def store():
     MENU_LIST = _store(menuBar)
     getShelfButton()
     getCmdsMember()
+    getScripts()
     
     print "Search Commands: {0} buttons registered".format(len(COMMANDS))
     return MENU_LIST
@@ -242,6 +249,7 @@ def getCmdsMember():
             COMMANDS[name]["group"] = "Maya Command" 
             COMMANDS[name]["category"] = "command"
 
+# ----------------------------------------------------------------------------
 
 def loadShelf(index):
     """loadShelf 
@@ -333,3 +341,54 @@ def getShelfButton():
                     else:
                         # Note 运行双击的 python 代码
                         COMMANDS[name]["cmdOption"]  = partial(lambda x:eval(compile(x, '<string>', 'exec')),options)
+
+# ----------------------------------------------------------------------------
+
+
+def getRepo():
+    if not os.path.exists(SETTING_PATH):
+        path = os.path.join(os.path.dirname(cmds.about(env=1)),"scripts")
+        return [path] if os.path.exists(path) else []
+
+    with open(SETTING_PATH,'r') as f:
+        data = json.load(f,encoding="utf-8")
+    return [path for path,state in data["path"].iteritems() if state]
+
+def runPyScript(script_path):
+    # add to pythonpath and execute
+    sys.path.insert(0, os.path.dirname(script_path))
+    module_name = os.path.split(script_path)[-1].replace(".py", "")
+    import_module(module_name)
+    # cleanup
+    del sys.modules[module_name]
+    sys.path = sys.path[1:]
+    
+def runMelScript(script_path):
+    with open(script_path,'r') as f:
+        mel.eval(f.read())
+
+def getScripts():  
+    for repo in getRepo():
+        for (path, _, files) in os.walk(repo):
+            for f in files:
+                py_check = f.lower().endswith(".py")
+                mel_check = f.lower().endswith(".mel")
+                if not py_check and not mel_check:
+                    continue
+
+                file_path = os.path.realpath(os.path.join(path, f))
+                name = os.path.splitext(f)[0]
+                COMMANDS[file_path] = dict()
+                COMMANDS[file_path]["name"] = name
+                COMMANDS[file_path]["pin"] = False
+                COMMANDS[file_path]["group"] = "Scripts Files" 
+                COMMANDS[file_path]["search"] = file_path
+                COMMANDS[file_path]["hierarchy"] = file_path
+                COMMANDS[file_path]["category"] = "script"
+
+                if py_check:
+                    COMMANDS[file_path]["icon"] = utils.QIcon(":/pythonFamily.png")
+                    COMMANDS[file_path]["cmd"] = partial(runPyScript,file_path) 
+                elif mel_check:
+                    COMMANDS[file_path]["icon"] = utils.QIcon(":/commandButton.png")
+                    COMMANDS[file_path]["cmd"] = partial(runMelScript,file_path) 

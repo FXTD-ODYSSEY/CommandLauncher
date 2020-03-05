@@ -5,6 +5,7 @@ from .manager import *
 from .results import *
 from .commands import *
 
+from .statusIcon import CommandLauncherIcon
 
 # ----------------------------------------------------------------------------
 
@@ -33,8 +34,13 @@ def setup():
     return COMMAND_LAUNCHER
 
 def clean():
-    for w in utils.mayaWindow().children():
+    for w in mayaWindow().children():
         if str(type(w)) == str(SearchWidget):
+            # NOTE 删除设定窗口
+            setting = w.manager.setting
+            if w.parent() != setting.window():
+               setting.window().close()
+            setting.deleteLater()
             w.deleteLater()
     global COMMAND_SEARCH_ICON
     COMMAND_SEARCH_ICON = None

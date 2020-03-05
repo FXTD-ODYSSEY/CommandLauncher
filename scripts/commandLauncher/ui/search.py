@@ -321,6 +321,7 @@ class SearchEdit(utils.QLineEdit):
             "cmds"  : lambda:utils.QApplication.translate('filter','cmds'),
             "menu"  : lambda:utils.QApplication.translate('filter','menu'),
             "shelf" : lambda:utils.QApplication.translate('filter','shelf'),
+            "script" : lambda:utils.QApplication.translate('filter','script'),
             "command" : lambda:utils.QApplication.translate('filter','command'),
         }
 
@@ -390,8 +391,11 @@ class SearchEdit(utils.QLineEdit):
         # NOTE 开启 cmds 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+E"):
             return self.filterDisplay("cmds")
+        # NOTE 开启 command 过滤模式
         elif KeySequence == utils.QKeySequence("Ctrl+R"):
             return self.filterDisplay("command")
+        elif KeySequence == utils.QKeySequence("Ctrl+T"):
+            return self.filterDisplay("script")
          # NOTE 打开搜索菜单
         elif KeySequence == utils.QKeySequence("Ctrl+`"):
             return self.parent.manager.aboutToShow_()

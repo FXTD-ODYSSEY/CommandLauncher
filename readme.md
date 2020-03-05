@@ -27,5 +27,7 @@ CommandLauncher Maya 命令启动器
 - [x] 修改 menu 名称
 - [x] 添加状态图标就到 status line
 - [x] 通过多线程优化加载
-- [ ] 将 quicklauncher 的功能集成
+- [x] 开发一个控制脚本路径导入导出的组件
+- [x] 将 quicklauncher 的功能集成
+- [x] 添加 scripts 过滤
 - [ ] 完善文章总结&md说明
