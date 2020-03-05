@@ -352,7 +352,7 @@ def getRepo():
 
     with open(SETTING_PATH,'r') as f:
         data = json.load(f,encoding="utf-8")
-    return [path for path,state in data["path"].iteritems() if state]
+    return [path for path,state in data["path"].iteritems() if state and os.path.exists(path)]
 
 def runPyScript(script_path):
     # add to pythonpath and execute

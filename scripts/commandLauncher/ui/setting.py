@@ -8,6 +8,7 @@ __date__ = '2020-03-04 21:30:31'
 import os
 import json
 import webbrowser
+from functools import partial
 
 from maya import cmds
 from maya import OpenMayaUI
@@ -80,24 +81,74 @@ class PathItem(utils.QWidget):
 
         frame = RedFrame(self)
         frame.show()
-
         
+        self.setContextMenuPolicy(utils.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.rightClickMenu)
+
+    def rightClickMenu(self,pos):
+        # NOTE 生成右键菜单
+        self.menu = utils.QMenu(self)
+        modify_file_action = utils.QAction(u'修改文件路径', self)
+        open_dir_action = utils.QAction(u'打开文件路径', self)
+
+        modify_file_action.triggered.connect(self.modifyItem)
+        open_dir_action.triggered.connect(partial(os.startfile,self.text()))
+
+        self.menu.addAction(modify_file_action)
+        self.menu.addAction(open_dir_action)
+
+        self.menu.popup(utils.QCursor.pos())
+        
+    def modifyItem(self):
+        path = utils.QFileDialog.getExistingDirectory(self)
+
+        if not os.path.exists(path):
+            return
+
+        del self.setting_win.setting_data["path"][self.text()]
+        self.setText(path)
+        self.setting_win.setting_data["path"][path] = self.Path_CB.isChecked()
+        self.setting_win.exportJsonSetting(SETTING_PATH)
+
     def setupUi(self):
         self.setObjectName("Path_Widget")
+        
         self.horizontalLayout_2 = utils.QHBoxLayout()
         self.setLayout(self.horizontalLayout_2)
         self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.Path_CB = utils.QCheckBox(self)
-        sizePolicy = utils.QSizePolicy(utils.QSizePolicy.Expanding, utils.QSizePolicy.Fixed)
+        sizePolicy = utils.QSizePolicy(utils.QSizePolicy.Fixed, utils.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.Path_CB.sizePolicy().hasHeightForWidth())
         self.Path_CB.setSizePolicy(sizePolicy)
         self.Path_CB.setContextMenuPolicy(utils.Qt.CustomContextMenu)
         self.Path_CB.setStyleSheet("")
+        self.Path_CB.setText("")
         self.Path_CB.setObjectName("Path_CB")
         self.horizontalLayout_2.addWidget(self.Path_CB)
+        self.Path_Label = utils.QLabel(self)
+        sizePolicy = utils.QSizePolicy(utils.QSizePolicy.Expanding, utils.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.Path_Label.sizePolicy().hasHeightForWidth())
+        self.Path_Label.setSizePolicy(sizePolicy)
+        self.Path_Label.setObjectName("Path_Label")
+        self.horizontalLayout_2.addWidget(self.Path_Label)
+
+        self.Path_Label.setStyleSheet("""
+        QLabel{
+            margin-left: 5px;
+        }
+
+        QLabel:hover{
+            margin-left: 0px;
+            color:coral;
+        }
+        """)
+
+
         self.Path_Del = utils.QPushButton(self)
         self.Path_Del.setMinimumSize(utils.QSize(0, 0))
         self.Path_Del.setMaximumSize(utils.QSize(25, 16777215))
@@ -131,10 +182,10 @@ class PathItem(utils.QWidget):
         self.setting_win.exportJsonSetting(SETTING_PATH)
         
     def text(self):
-        return self.Path_CB.text()
+        return self.Path_Label.text()
 
     def setText(self,text):
-        self.Path_CB.setText(text)
+        self.Path_Label.setText(text)
 
     def setChecked(self,checked):
         self.Path_CB.setChecked(checked)
@@ -142,9 +193,9 @@ class PathItem(utils.QWidget):
 class SearchPathWidget(utils.QWidget):
     def __init__(self,setting_win):
         super(SearchPathWidget,self).__init__()
-        self.setupUi()
-
         self.setting_win = setting_win
+
+        self.setupUi()
 
     def setupUi(self):
         self.verticalLayout_2 = utils.QVBoxLayout(self)
@@ -254,6 +305,37 @@ class SearchPathWidget(utils.QWidget):
         self.horizontalLayout.addWidget(self.Refresh_BTN)
 
 
+        self.Setting_BTN = utils.QPushButton(self.Add_Container)
+        sizePolicy = utils.QSizePolicy(utils.QSizePolicy.Preferred, utils.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.Setting_BTN.sizePolicy().hasHeightForWidth())
+        self.Setting_BTN.setSizePolicy(sizePolicy)
+        self.Setting_BTN.setMinimumSize(utils.QSize(0, 0))
+        self.Setting_BTN.setAutoFillBackground(False)
+        self.Setting_BTN.setStyleSheet('''
+            QPushButton{
+                padding:5px;
+                padding-bottom:8px;
+                border-radius:10px;
+                background:orange;
+                color:white;
+                font-size:12.5px;
+                font:bold;
+            }
+
+            QPushButton::hover{
+                color:rgb(255, 255, 0)
+            }
+
+            QPushButton::pressed {
+                background:wheat
+            }
+        ''')
+        self.Setting_BTN.setObjectName("Setting_BTN")
+        self.horizontalLayout.addWidget(self.Setting_BTN)
+
+
         spacerItem1 = utils.QSpacerItem(40, 20, utils.QSizePolicy.Expanding, utils.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.verticalLayout.addWidget(self.Add_Container)
@@ -267,8 +349,12 @@ class SearchPathWidget(utils.QWidget):
 
         self.Add_BTN.setText(u"+")
         self.Refresh_BTN.setText(u"↻")
+        self.Setting_BTN.setText(u"ℹ")
         self.Add_BTN.clicked.connect(self.addPath)
         self.Refresh_BTN.clicked.connect(commands.store)
+        self.Setting_BTN.clicked.connect(partial(os.startfile,os.path.dirname(SETTING_PATH)))
+
+    
 
     def addPath(self):
         path = utils.QFileDialog.getExistingDirectory(self)
