@@ -96,3 +96,10 @@ Install Method also using the module installer method, you could check my other 
 > + shortcut number - Support How many quick shortcut num
 > + item display num - Define How many item will display, if the number is too large, will slow down the search time.
 
+---
+
+> &emsp;&emsp;Here is the code path search setting, which add  `documents / maya / version / scripts` directory by default.         
+> &emsp;&emsp;After adding the directory, click Refresh to search the code files under the directory for execution. (both Python and Mel are available).       
+> &emsp;&emsp;The first button is used to add a new directory.      
+> &emsp;&emsp;The second button is used to refresh the load of the current directory.      
+> &emsp;&emsp;The third button is to open the folder where the settings are stored for manual modification.     
