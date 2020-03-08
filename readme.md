@@ -3,6 +3,8 @@
 Maya CommandLauncher 
 </h1>
 
+[中文文档](./readme_zh_CN.md)
+
 This Plugin is inspire by two plugins below 
 + [CommandSearch](http://technicaldirector.nl/projects/command_search/)
 + [quicklauncher](https://github.com/csaez/quicklauncher)
