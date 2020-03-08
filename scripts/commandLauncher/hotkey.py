@@ -1,8 +1,6 @@
-from . import ui, decorators
+from . import ui
 
-
-@decorators.getCommandSearch  
-def focus(commandSearch):
+def show():
     """
     Set focus to the input search field of the command search widget. Will
     return early if either the results window or the search bar already
@@ -10,8 +8,11 @@ def focus(commandSearch):
     
     :param SearchWidget commandSearch: decorator handles this argument
     """
-    if commandSearch.search.hasFocus() or commandSearch.results.hasFocus():
-        return
-
-    ui.mayaWindow().activateWindow()
-    commandSearch.enter()
+    # get COMMAND_LAUNCHER
+    COMMAND_LAUNCHER = ui.COMMAND_LAUNCHER
+    
+    # validate COMMAND_LAUNCHER
+    if not COMMAND_LAUNCHER:
+        raise ValueError("COMMAND LAUNCHER not exists!")
+        
+    COMMAND_LAUNCHER.show()

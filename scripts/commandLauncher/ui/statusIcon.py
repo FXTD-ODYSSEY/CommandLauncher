@@ -4,6 +4,8 @@ __author__ =  'timmyliang'
 __email__ =  '820472580@qq.com'
 __date__ = '2020-03-04 21:55:38'
 
+import json
+import webbrowser
 from . import utils
 
 class CommandLauncherSwitch(utils.QPushButton):
@@ -19,6 +21,7 @@ class CommandLauncherSwitch(utils.QPushButton):
         self.lancher_state = True
 
         self.menu = utils.QMenu()
+        self.menu.setFixedWidth(120)
         self.setMenu(self.menu)
 
         self.divider = utils.Divider(self,"")
@@ -27,17 +30,35 @@ class CommandLauncherSwitch(utils.QPushButton):
         self.State_BTN = utils.QPushButton()
         self.State_BTN.clicked.connect(self.toggleState)
         self.add(self.State_BTN)
+
+        self.Setting_BTN = utils.QPushButton()
+        self.Setting_BTN.clicked.connect(self.openSettingWindow)
+        self.add(self.Setting_BTN)
+
+        self.Help_BTN = utils.QPushButton()
+        self.Help_BTN.clicked.connect(lambda:webbrowser.open_new_tab(r"https://github.com/FXTD-ODYSSEY/CommandLauncher/blob/master/readme.md"))
+        self.add(self.Help_BTN)
         
         self.retranslateUi()
 
-    def changeEvent(self, event):
-        if event.type() == utils.QEvent.LanguageChange:
-            self.retranslateUi()
-        super(CommandLauncherSwitch, self).changeEvent(event)
 
-    def toggleState(self):
+    def getCommandLauncher(self):
+        from . import getCommandLauncher
+        COMMAND_LAUNCHER = getCommandLauncher()
+        if COMMAND_LAUNCHER:
+            return COMMAND_LAUNCHER
+
+    def openSettingWindow(self):
+        
+        COMMAND_LAUNCHER = self.getCommandLauncher()
+        if COMMAND_LAUNCHER:
+            COMMAND_LAUNCHER.manager.setting.mayaShow()
+    
+    def toggleState(self,state=None):
         from . import setup,clean
-        self.lancher_state = not self.lancher_state
+        self.lancher_state = not self.lancher_state if state is None else state
+        self.Setting_BTN.setEnabled(self.lancher_state)
+
 
         if self.lancher_state:
             setup()
@@ -48,10 +69,27 @@ class CommandLauncherSwitch(utils.QPushButton):
 
         self.retranslateUi()
 
+        from .setting import SETTING_PATH
+        with open(SETTING_PATH,'r') as f:
+            data = json.load(f,encoding="utf-8")
+        
+        if data["enable"] != self.lancher_state:
+            data["enable"] = self.lancher_state
+            with open(SETTING_PATH,'w') as f:
+                json.dump(data,f,indent=4)
+
+    def changeEvent(self, event):
+        if event.type() == utils.QEvent.LanguageChange:
+            self.retranslateUi()
+        super(CommandLauncherSwitch, self).changeEvent(event)
+
+
     def retranslateUi(self):
         self.divider.setText(utils.QApplication.translate('icon','CommandLauncher'))
         text = utils.QApplication.translate('icon','OFF') if self.lancher_state else utils.QApplication.translate('icon','ON')
         self.State_BTN.setText(text)
+        self.Setting_BTN.setText(utils.QApplication.translate('icon','setting'))
+        self.Help_BTN.setText(utils.QApplication.translate('icon','help'))
 
     def add(self, widget):
         """

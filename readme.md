@@ -1,34 +1,96 @@
 
 <h1 style="text-align:center">
-CommandLauncher Maya 命令启动器
+Maya CommandLauncher 
 </h1>
 
-这个插件基于以下两款插件的启发进行开发
+This Plugin is inspire by two plugins below 
 + [CommandSearch](http://technicaldirector.nl/projects/command_search/)
 + [quicklauncher](https://github.com/csaez/quicklauncher)
 
-代码结构完全是在 CommandSearch 的源码上进行的修改
-此外 Listary5.0 软件的使用逻辑也启发了我
+Most of the code structure modified from the commandSearch source code.    
+And I also thanks for the Listary5.0 software , some good feature also borrow from it.   
 
-## 前言
+## Install
 
-> &emsp;&emsp;最近在看 mGear 开源绑定框架的教程。
-> &emsp;&emsp;偶然发现了大佬使用一个相当方便的 quickLauncher 工具快速启动脚本
-> &emsp;&emsp;于是激发了我研究的兴趣。
+Install Method also using the module installer method, you could check my other plugin [mpdb](https://github.com/FXTD-ODYSSEY/mpdb) for more detail
 
-> &emsp;&emsp;后来，还是因为 mGear 提到的一些插件，于是去 Autodesk 官方的商店查找工具。
-> &emsp;&emsp;在那里我找到了另一个UI做得非常棒的工具 [CommandSearch](https://apps.autodesk.com/MAYA/en/Detail/Index?id=3148420959640138602)
+1. download the release version of the plugin. (you also can clone the release branch)
+2. unzip the folder to any location in your computer.(skip this step if you clone the branch)
+3. drag the mpdb.mel to your running Maya viewport.
 
-> &emsp;&emsp;最初是接触 3dsMax 和 Houdini 都相关的搜索框，而 Maya 的命令搜索功能非常落后。
+![alt](img/01.gif)
 
-## todolist
+![alt](img/02.gif)
 
-- [x] 用i18n替换之前的手动替换语言方式
-- [x] 修改 menu 名称
-- [x] 添加状态图标到 status line
-- [x] 通过多线程优化加载
-- [x] 开发一个控制脚本路径导入导出的组件
-- [x] 将 quicklauncher 的功能集成
-- [x] 添加 scripts 过滤
-- [x] 打开&修改路径 | 打开 setting.json 路径
-- [ ] 完善文章总结&md说明
+## How to use
+
+> &emsp;&emsp;When install complete, you can find a search icon on the Maya status line.     
+> &emsp;&emsp;After that,you can press Tab Key on the viewport, the search bar will popup.     
+
+### Status Icon
+
+![alt](img/03.png)
+
+> &emsp;&emsp;press the status Icon you can disable the CommandLauncher and Open the setting or Help.     
+
+![alt](img/04.png)
+
+> &emsp;&emsp;When you press the OFF button, the CommandLauncher will delete completely.     
+> &emsp;&emsp;And It will log the setting into the json file so that next Maya launch would not enable the CommandLauncher automatically.      
+
+![alt](img/05.png)
+
+> &emsp;&emsp;press the setting button will popup the SettingWindow     
+
+### Search 
+
+> &emsp;&emsp;By Default, when you press the Tab key on the viewport, will launch the search bar.     
+> &emsp;&emsp;Then,you can type your keyword to search the command in Maya.     
+
+> &emsp;&emsp;You can use Keyboard to browse the search results.     
+> + Use the` Up and Down Arrow` for scrolling.
+> + Use the `Left and Right Arrow `for switch to Pin and Option Button.
+> + Press `Alt + Num` you can jump to the specific item quickly.
+> + Press `Ctrl + Num` you can trigger the specific item quickly.
+
+![alt](img/06.gif)
+
+### Filter Results
+
+![alt](img/11.gif)
+
+> &emsp;&emsp;Press `Ctrl + Q W E R T` Key can switch the filter mode.     
+
+### Pins Sets
+
+> &emsp;&emsp;The search icon on the left can open the menu when you click it.     
+
+![alt](img/07.png)
+
+> &emsp;&emsp;Press the Add Item will popup a input dialog for the sets name you want to add.     
+> &emsp;&emsp;Press the Clear Item will clear current active pins sets.     
+> &emsp;&emsp;Press the Delete Item will popup a input dialog to select the delete set name.     
+
+![alt](img/08.png)
+
+> &emsp;&emsp;After Pin Set create , when you pin the result item will add to the active Pin Set automatically.     
+
+![alt](img/09.png)
+
+> &emsp;&emsp;By Default, if you active the pin set but nothing input will popup up the pin set result below.     
+
+![alt](img/10.gif)
+
+> + Press `Ctrl + alt + + Num` can switch the top nine Pin Sets swiftly.
+
+### Setting
+
+![alt](img/05.png)
+
+> + Language Mode - switch current plugin text Language
+> + Tab Key Enabled - disable or enable the Tab HotKey register
+> + scroll start line - Define the line number that the `Up and Down Arrow` Key will scroll the Scroll Bar
+> + scroll lock line - Define the line number that the quick shortcut num will display
+> + shortcut number - Support How many quick shortcut num
+> + item display num - Define How many item will display, if the number is too large, will slow down the search time.
+

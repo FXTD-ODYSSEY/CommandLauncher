@@ -34,7 +34,7 @@ def findLocation():
     if not os.path.exists(directory):
         os.mkdir(directory)
 
-    path = os.path.join(directory,"CommandLauncher.json")
+    path = os.path.join(directory,"pins.json")
     return path  
  
 # ----------------------------------------------------------------------------  

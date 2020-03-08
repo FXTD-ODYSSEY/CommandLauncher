@@ -99,24 +99,17 @@ def store():
     to the commands variable.
     """
     # reset commands
+    global COMMANDS
     COMMANDS = {}
 
     import threading
 
     # loop menu bar
-    menuBar = utils.mayaMenu()
-    _store(menuBar)
+    _store(utils.mayaMenu())
+    getShelfButton()
+    getCmdsMember()
+    getScripts()
 
-    # NOTE  多线程加速
-    # menuThread = threading.Thread(target=_store,args=(menuBar,))
-    # menuThread.start()
-    shelfThread = threading.Thread(target=getShelfButton)
-    shelfThread.start()
-    cmdsThread = threading.Thread(target=getCmdsMember)
-    cmdsThread.start()
-    scriptThread = threading.Thread(target=getScripts)
-    scriptThread.start()
-    
     print "Command Launcher Item Updated "
     
 def _store(parent, parents=[], menu_list=[]):
@@ -132,6 +125,7 @@ def _store(parent, parents=[], menu_list=[]):
     for i, item in enumerate(children):
         # tree
         tree = parents[:]
+
         
         # get items
         name = item.objectName().encode("utf-8")
@@ -143,7 +137,7 @@ def _store(parent, parents=[], menu_list=[]):
         # process menu
         if type(item) == utils.QMenu:
             tree.append(
-                getMenu(item)
+                item.title().encode("utf-8")
             )
             menu_list.append(item)
         # process item
@@ -167,18 +161,23 @@ def _store(parent, parents=[], menu_list=[]):
     return menu_list
 # ----------------------------------------------------------------------------  
           
-def getMenu(menu):
+def showMenu(parent=None):
     """
-    Get the name of the QMenu parsed.
-    
-    :param QMenu menu:
-    :return: Menu name
-    :rtype: str
+    Recursive show menu so that we can get menu item in multirheading
     """
-    name = menu.title().encode("utf-8")
-    menu.aboutToShow.emit()
-    return name
-    
+    parent = parent if parent else utils.mayaMenu()
+    for item in parent.children():
+        # skip if no item name
+        if not item.objectName():
+            continue
+
+        # process menu
+        if type(item) == utils.QMenu:
+            item.aboutToShow.emit()
+            
+        # process next
+        showMenu(item)
+
 # ----------------------------------------------------------------------------
     
 def getItem(item, name, parents , menu_list):

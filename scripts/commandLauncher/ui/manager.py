@@ -16,9 +16,9 @@ import os
 import json
 import locale
 import webbrowser
+from collections import OrderedDict
 
 DIR = os.path.dirname(__file__)
-INSTRUNCTION_PATH = "file:///%s" % os.path.join(os.path.dirname(DIR),"instruction","README.html")
 
 class ManagerMenu(utils.QMenu):
     """
@@ -32,8 +32,9 @@ class ManagerMenu(utils.QMenu):
     """
     def __init__(self, parent=None):
         utils.QMenu.__init__(self, parent)
-        self.RB_dict = {}
+        self.RB_dict = OrderedDict()
         
+        self.pinName              = ""
         self.pins_div_text        = ""
         self.sets_div_text        = ""
         self.sets_add_text        = ""
@@ -50,7 +51,6 @@ class ManagerMenu(utils.QMenu):
         
         self.setting = SettingWindow(self)
         
-    def initialize(self):
         # menu
         self.setObjectName("PinMenu")
         self.setMinimumWidth(140)
@@ -58,9 +58,9 @@ class ManagerMenu(utils.QMenu):
         # connect
         self.aboutToShow.connect(self.aboutToShow_)
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
-        self.populate()
         self.pins =  pins.read()
-        
+        self.populate()
+            
     # ------------------------------------------------------------------------
                 
     def aboutToShow_(self):
@@ -75,8 +75,6 @@ class ManagerMenu(utils.QMenu):
         self.populate()
         self.position()
 
-        self.search.setFocus()
-        
     # ------------------------------------------------------------------------
     
     def add(self, widget):
@@ -146,8 +144,8 @@ class ManagerMenu(utils.QMenu):
         self.sets_div = utils.Divider(self, self.sets_div_text)  
         self.add(self.sets_div)        
         
-        self.search = utils.QLineEdit()
-        self.add(self.search)    
+        # self.search = utils.QLineEdit()
+        # self.add(self.search)    
 
         self.sets_add = utils.QAction(self.sets_add_text,self)
         self.sets_add.triggered.connect(self.pinAdd)
@@ -176,7 +174,7 @@ class ManagerMenu(utils.QMenu):
         self.command_setting.triggered.connect(self.setting.mayaShow)
         
         self.command_help = utils.QAction(self.command_help_text,self)
-        self.command_help.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
+        self.command_help.triggered.connect(lambda:webbrowser.open_new_tab(r"https://github.com/FXTD-ODYSSEY/CommandLauncher/blob/master/readme.md"))
         
         self.addAction(self.command_refresh)
         self.addAction(self.command_setting)
@@ -198,33 +196,18 @@ class ManagerMenu(utils.QMenu):
         
     # ------------------------------------------------------------------------
         
-    def setActive(self,num=0):
+    def setActive(self,btn):
         """
         Switch active pin set to checked radio button.
         """
-        names = pins.get().keys()
-        if not names:
-            return
-        
-        if num:
-            buttons = self.group.buttons()
-            if len(buttons) >= num:
-                btn = buttons[num-1]
-            else:
-                return
-        else:
-            btn = self.group.checkedButton()
+        # NOTE 切换当前 button 状态
+        [button.setChecked(False) for button in self.group.buttons() if button != btn]
             
-        if not btn or self.active == btn.text():
+        if not btn.isChecked() or self.active == btn.text():
             self.active = None
             for _, v in commands.get().iteritems():
                 v["pin"] = False
-            return
         else:
-            # set active
-            for button in self.group.buttons():
-                if button != btn:
-                    button.setChecked(False)
 
             self.active = btn.text()
             
@@ -244,25 +227,63 @@ class ManagerMenu(utils.QMenu):
                     
     # --------------------------------------------------------------------
     
-    @property    
-    def pinName(self):
-        """
-        Get text from QLineEdit
-        """
-        return self.search.text().lower()
+    def getNewPinName(self):
         
-    def pinAdd(self):
+        # NOTE 点击触发弹窗输入 | 输入置顶集的名称
+        dialog = utils.QInputDialog(self)
+        dialog.setOkButtonText     ( utils.QApplication.translate('dialog',"OK")     )
+        dialog.setCancelButtonText ( utils.QApplication.translate('dialog',"Cancel") )
+        dialog.setWindowTitle      ( utils.QApplication.translate('pins',"Get The New Pins Name") )
+        dialog.setLabelText        ( utils.QApplication.translate('pins',"input pins new name below") )
+        state = dialog.exec_()
+        text = dialog.textValue()
+        dialog.deleteLater()
+
+        # NOTE 输入为或者点击取消，跳过
+        if not state or not text:
+            return False
+        return text
+        
+    def getExistPinName(self):
+
+        # NOTE 获取已经设置的 置顶集 
+        pin_list = pins.get().keys()
+        if not pin_list:
+            title = utils.QApplication.translate('dialog',"warning")
+            msg = utils.QApplication.translate('dialog',"there are no pins at all")
+            utils.QMessageBox.warning(self,title,msg)
+            return False
+
+        # NOTE 点击触发弹窗输入 | 输入置顶集的名称
+        dialog = utils.QInputDialog(self)
+        dialog.setComboBoxEditable ( False )
+        dialog.setComboBoxItems    ( pin_list )
+        dialog.setOkButtonText     ( utils.QApplication.translate('dialog',"OK")     )
+        dialog.setCancelButtonText ( utils.QApplication.translate('dialog',"Cancel") )
+        dialog.setWindowTitle      ( utils.QApplication.translate('pins',"Get The Modify Pins Name") )
+        dialog.setLabelText        ( utils.QApplication.translate('pins',"select the pins name you want to modify") )
+
+        state = dialog.exec_()
+        text = dialog.textValue()
+        dialog.deleteLater()
+
+        # NOTE 输入为或者点击取消，跳过
+        if not state or not text:
+            return False
+        return text
+
+    def pinAdd(self,pin_name=None):
         """
         Add pin set, store all if the currently pinned commands and store
         then under the provided pin set name.
         
         :raises ValueError: if name is invalid or no pins are found
         """
-        # get pin name
-        if not self.pinName:
-            raise ValueError("Search Commands: invalid name")
-            return
         
+        ADD = True if pin_name else False
+        pin_name = pin_name if pin_name else self.getNewPinName()
+        if not pin_name : return
+
         # get pinned name
         pinned = []
         for k, v in commands.get().iteritems():
@@ -271,17 +292,21 @@ class ManagerMenu(utils.QMenu):
                 
             pinned.append(v.get("hierarchy"))
         
-        if not pinned:
-            raise ValueError("Search Commands: no pinned commands")
+        pin_data = pins.get()
+
+        if not ADD and pin_name in pin_data:
+            title = utils.QApplication.translate('dialog',"warning")
+            msg = utils.QApplication.translate('dialog',"pin name already exists")
+            utils.QMessageBox.warning(self,title,msg)
             return
-        
+
         # set active
-        self.active = self.pinName
-        pins.get()[self.pinName] = pinned
+        self.active = pin_name
+        pin_data[pin_name] = pinned
         
         # write to file
         pins.write()
-       
+
         self.populate()
 
     def pinClear(self):
@@ -303,18 +328,17 @@ class ManagerMenu(utils.QMenu):
         :raises ValueError: if name is invalid
         """
 
-        if not self.pinName in pins.get().keys():
-            raise ValueError("Search Commands: invalid name")
-            return
+        pin_name = self.getExistPinName()
         
         # pop from list
-        pins.get().pop(self.pinName, None)
+        pins.get().pop(pin_name, None)
         self.pinClear()
         
         # write to file
         pins.write()
         
-        self.RB_dict[self.pinName].setParent(None)
+        # NOTE 删除置顶集 RadioButton
+        self.RB_dict[pin_name].setParent(None)
 
     # --------------------------------------------------------------------
 

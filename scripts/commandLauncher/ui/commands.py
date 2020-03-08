@@ -234,9 +234,7 @@ class Button(utils.QWidget):
         self.pin.setIcon(utils.QIcon(PIN_ICON))
         manager = self.window().parent.manager
         if manager.active and not init:
-            manager.search.setText(manager.active)
-            manager.pinAdd()
-            manager.search.setText("")
+            manager.pinAdd(manager.active)
 
         self.pin.pressed.connect(self.setUnpin)
 
@@ -245,9 +243,7 @@ class Button(utils.QWidget):
         self.pin.setIcon(utils.QIcon(UNPIN_ICON))
         manager = self.window().parent.manager
         if manager.active and not init:
-            manager.search.setText(manager.active)
-            manager.pinAdd()
-            manager.search.setText("")
+            manager.pinAdd(manager.active)
         self.pin.pressed.connect(self.setPin)
         
     # ------------------------------------------------------------------------

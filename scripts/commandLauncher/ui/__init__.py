@@ -5,7 +5,7 @@ from .manager import *
 from .results import *
 from .commands import *
 
-from .statusIcon import CommandLauncherIcon
+
 from maya import cmds
 
 # ----------------------------------------------------------------------------
@@ -18,14 +18,10 @@ COMMAND_LAUNCHER = None
 # ----------------------------------------------------------------------------
 
 class Worker(QRunnable):
-
     def __init__(self,func):
         super(Worker,self).__init__()
         self.func = func
     def run(self):
-        '''
-        Initialise the runner function with passed args, kwargs.
-        '''
         self.func()
 
 def setup(): 
@@ -35,7 +31,7 @@ def setup():
     # validate timeline marker
     if COMMAND_LAUNCHER:
         raise RuntimeError("Command search is already installed!")
-
+    
     COMMAND_LAUNCHER = SearchWidget(mayaWindow())
 
     thread = QThreadPool()
@@ -56,6 +52,9 @@ def clean():
     global COMMAND_LAUNCHER
     COMMAND_LAUNCHER = None
     
+def getCommandLauncher():
+    global COMMAND_LAUNCHER
+    return COMMAND_LAUNCHER
 # ----------------------------------------------------------------------------
         
 def install():
@@ -78,9 +77,16 @@ def install():
     # get layout        
     layout = statusLine.layout()  
 
-    # create command search
+    # create CommandLauncher Icon to status line
+    from .statusIcon import CommandLauncherIcon
     COMMAND_SEARCH_ICON = CommandLauncherIcon(parent)
     layout.addWidget(COMMAND_SEARCH_ICON)
 
     # setup CommandLauncher
-    cmds.evalDeferred(setup)
+    from .setting import SETTING_PATH
+    with open(SETTING_PATH,'r') as f:
+        data = json.load(f,encoding="utf-8")
+    if data.get("enable"):
+        cmds.evalDeferred(setup)
+    else:
+        COMMAND_SEARCH_ICON.button.toggleState(False)

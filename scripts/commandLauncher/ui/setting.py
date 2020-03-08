@@ -14,8 +14,6 @@ from maya import cmds
 from maya import OpenMayaUI
 
 DIR = os.path.dirname(__file__)
-INSTRUNCTION_PATH = "file:///%s" % os.path.join(os.path.dirname(DIR),"instruction","README.html")
-       
 
 path = os.environ.get("LOCALAPPDATA")
 directory = os.path.join(path, "Maya_CommandLauncher")
@@ -27,12 +25,12 @@ SETTING_PATH = os.path.join(directory,"setting.json")
 from . import utils
 from .. import commands
 
-class RedFrame(utils.QWidget):
+class ItemFrame(utils.QWidget):
     BorderColor     = utils.QColor("coral")     
     BackgroundColor = utils.QColor(100, 100, 100, 125) 
     
     def __init__(self, parent):
-        super(RedFrame,self).__init__()
+        super(ItemFrame,self).__init__()
         self.setAttribute(utils.Qt.WA_NoSystemBackground)
         self.setAttribute(utils.Qt.WA_TransparentForMouseEvents)
         self.setWindowFlags(utils.Qt.WindowTransparentForInput | utils.Qt.FramelessWindowHint)
@@ -79,7 +77,7 @@ class PathItem(utils.QWidget):
         setting_win.setting_data["path"][path] = True
         self.setChecked(True)
 
-        frame = RedFrame(self)
+        frame = ItemFrame(self)
         frame.show()
         
         self.setContextMenuPolicy(utils.Qt.CustomContextMenu)
@@ -135,6 +133,7 @@ class PathItem(utils.QWidget):
         sizePolicy.setHeightForWidth(self.Path_Label.sizePolicy().hasHeightForWidth())
         self.Path_Label.setSizePolicy(sizePolicy)
         self.Path_Label.setObjectName("Path_Label")
+        self.Path_Label.mousePressEvent = lambda x:self.Path_CB.toggle()
         self.horizontalLayout_2.addWidget(self.Path_Label)
 
         self.Path_Label.setStyleSheet("""
@@ -389,39 +388,33 @@ class SettingWindow(utils.QWidget):
     
     def __init__(self,menu):
         super(SettingWindow,self).__init__()
-        self.setupUi()
         
         self.setting_data = {}
+        # NOTE 默认设置
+        self.setting_data["enable"] = True
+        self.setting_data["Tab_CB"] = True
         self.setting_data["path"] = {os.path.join(os.path.dirname(cmds.about(env=1)),"scripts"):True}
         self.ptr = None
         
-        
+        self.setupUi()
         
         self.menu = menu
         self.search = menu.parent.search
         self.setupMenu()
         
-        # NOTE 获取当前设置
-        scroll_start = self.search.scroll_start
-        self.Scroll_Start_SP.setValue(scroll_start)
-        scroll_locked = self.search.scroll_locked
-        self.Scroll_Lock_SP.setValue(scroll_locked)
+        # NOTE 获取当前输入设置
+        self.Scroll_Start_SP.setValue(self.search.scroll_start)
+        self.Scroll_Lock_SP.setValue(self.search.scroll_locked)
     
-        shortcut_num = self.search.shortcut_num
-        self.Shortcut_SP.setValue(shortcut_num)
-        display_num = self.search.display_num
-        self.Display_SP.setValue(display_num)
+        self.Shortcut_SP.setValue(self.search.shortcut_num)
+        self.Display_SP.setValue(self.search.display_num)
         
         self.Scroll_Lock_SP.valueChanged.connect(self.scrollLock)
         self.Scroll_Start_SP.valueChanged.connect(self.scrollStart)
         self.Display_SP.valueChanged.connect(self.display)
         self.Shortcut_SP.valueChanged.connect(self.shortcut)
         
-        if os.path.exists(SETTING_PATH):
-            self.importJsonSetting(SETTING_PATH)
-        else:
-            self.exportJsonSetting(SETTING_PATH)
-
+        
         self.setStyleSheet('font-family: Microsoft YaHei UI;')
 
         # NOTE 设置语言菜单
@@ -437,7 +430,12 @@ class SettingWindow(utils.QWidget):
 
         # NOTE 设置名称
         self.retranslateUi()
-    
+
+        if os.path.exists(SETTING_PATH):
+            self.importJsonSetting(SETTING_PATH)
+        else:
+            self.exportJsonSetting(SETTING_PATH)
+
     def setupUi(self):
         self.resize(379, 120)
         self.gridLayout = utils.QGridLayout()
@@ -481,7 +479,14 @@ class SettingWindow(utils.QWidget):
         self.gridLayout.addWidget(self.Shortcut_SP, 3, 1, 1, 1)
         self.Lang_Combo = utils.QComboBox()
         self.Lang_Combo.setObjectName("Lang_Combo")
-        self.gridLayout.addWidget(self.Lang_Combo, 0, 1, 1, 3)
+        self.gridLayout.addWidget(self.Lang_Combo, 0, 1, 1, 2)
+
+        self.Tab_CB = utils.QCheckBox()
+        
+        self.Tab_CB.setChecked(self.setting_data["Tab_CB"])
+        self.gridLayout.addWidget(self.Tab_CB, 0, 3, 1, 1)
+        self.Tab_CB.stateChanged.connect(self.setTabEnabled)
+        
 
         self.Setting_Container = utils.QWidget()
         self.Setting_Container.setLayout(self.gridLayout)
@@ -522,60 +527,38 @@ class SettingWindow(utils.QWidget):
         self.help_action = utils.QAction(u'使用说明', self)    
         self.help_menu.addAction(self.help_action)
         
-        self.help_action.triggered.connect(lambda:webbrowser.open_new_tab(INSTRUNCTION_PATH))
+        self.help_action.triggered.connect(lambda:webbrowser.open_new_tab(r"https://github.com/FXTD-ODYSSEY/CommandLauncher/blob/master/readme.md"))
     
     def retranslateUi(self):
-        self.edit_menu_text  = utils.QApplication.translate('menu','Edit')
-        self.import_text     = utils.QApplication.translate('menu','Import')
-        self.export_text     = utils.QApplication.translate('menu','Export')
-        self.reset_text      = utils.QApplication.translate('menu','Reset')
-        self.close_text      = utils.QApplication.translate('menu','Close')
-        self.help_menu_text  = utils.QApplication.translate('menu','Help')
-        self.help_text       = utils.QApplication.translate('menu','Documentation')
-        
-        self.Scroll_Lock     = utils.QApplication.translate('setting',"scroll lock line")
-        self.Languge         = utils.QApplication.translate('setting',"Language Mode")
-        self.Display         = utils.QApplication.translate('setting',"item display num")
-        self.Scroll_Start    = utils.QApplication.translate('setting',"scroll start line")
-        self.Shortcut        = utils.QApplication.translate('setting',"shortcut number")
-        self.Title           = utils.QApplication.translate('setting',"CommandLauncher - SettingWindow")
-        
-        self.pins_div        = utils.QApplication.translate('sets',"Pins")
-        self.sets_div        = utils.QApplication.translate('sets',"Sets")
-        self.sets_add        = utils.QApplication.translate('sets',"Add")
-        self.sets_clear      = utils.QApplication.translate('sets',"Clear")
-        self.sets_delete     = utils.QApplication.translate('sets',"Delete")
-        self.command_div     = utils.QApplication.translate('command',"Commands")
-        self.command_refresh = utils.QApplication.translate('command',"Refresh")
-        self.command_setting = utils.QApplication.translate('command',"Setting")
-        self.command_help    = utils.QApplication.translate('command',"Help")
-        
-        self.edit_menu.setTitle             ( self.edit_menu_text   )
-        self.import_json_action.setText     ( self.import_text      )
-        self.export_json_action.setText     ( self.export_text      )
-        self.reset_json_action.setText      ( self.reset_text       )
-        self.close_action.setText           ( self.close_text       )
-        self.help_menu.setTitle             ( self.help_menu_text   )
-        self.help_action.setText            ( self.help_text        )
+        self.edit_menu.setTitle             ( utils.QApplication.translate('menu','Edit')          )
+        self.import_json_action.setText     ( utils.QApplication.translate('menu','Import')        )
+        self.export_json_action.setText     ( utils.QApplication.translate('menu','Export')        )
+        self.reset_json_action.setText      ( utils.QApplication.translate('menu','Reset')         )
+        self.close_action.setText           ( utils.QApplication.translate('menu','Close')         )
+        self.help_menu.setTitle             ( utils.QApplication.translate('menu','Help')          )
+        self.help_action.setText            ( utils.QApplication.translate('menu','Documentation') )
 
-        self.Scroll_Lock_Label.setText      ( self.Scroll_Lock      )
-        self.Languge_Label.setText          ( self.Languge          )
-        self.Display_Label.setText          ( self.Display          )
-        self.Scroll_Start_Label.setText     ( self.Scroll_Start     )
-        self.Shortcut_Label.setText         ( self.Shortcut         )
-        self.window().setWindowTitle        ( self.Title            )
+        self.Tab_CB.setText                 ( utils.QApplication.translate('setting','Tab Key Enabled')                 )
+        self.Scroll_Lock_Label.setText      ( utils.QApplication.translate('setting',"scroll lock line")                )
+        self.Languge_Label.setText          ( utils.QApplication.translate('setting',"Language Mode")                   )
+        self.Display_Label.setText          ( utils.QApplication.translate('setting',"item display num")                )
+        self.Scroll_Start_Label.setText     ( utils.QApplication.translate('setting',"scroll start line")               )
+        self.Shortcut_Label.setText         ( utils.QApplication.translate('setting',"shortcut number")                 )
 
-        self.menu.pins_div_text        = self.pins_div         
+        self.Title = utils.QApplication.translate('setting',"CommandLauncher - SettingWindow")
+        self.window().setWindowTitle        ( self.Title  )
+
+        self.menu.pins_div_text        = utils.QApplication.translate('sets',"Pins")    
             
-        self.menu.sets_div_text        = self.sets_div         
-        self.menu.sets_add_text        = self.sets_add         
-        self.menu.sets_clear_text      = self.sets_clear       
-        self.menu.sets_delete_text     = self.sets_delete      
+        self.menu.sets_div_text        = utils.QApplication.translate('sets',"Sets")
+        self.menu.sets_add_text        = utils.QApplication.translate('sets',"Add")
+        self.menu.sets_clear_text      = utils.QApplication.translate('sets',"Clear")
+        self.menu.sets_delete_text     = utils.QApplication.translate('sets',"Delete")
 
-        self.menu.command_div_text     = self.command_div      
-        self.menu.command_refresh_text = self.command_refresh  
-        self.menu.command_setting_text = self.command_setting  
-        self.menu.command_help_text    = self.command_help 
+        self.menu.command_div_text     = utils.QApplication.translate('command',"Commands")
+        self.menu.command_refresh_text = utils.QApplication.translate('command',"Refresh")
+        self.menu.command_setting_text = utils.QApplication.translate('command',"Setting")
+        self.menu.command_help_text    = utils.QApplication.translate('command',"Help")
 
     @property
     def localeList(self):
@@ -664,6 +647,7 @@ class SettingWindow(utils.QWidget):
         self.Scroll_Lock_SP.setValue     ( self.setting_data["Scroll_Lock_SP"]  )
         self.Shortcut_SP.setValue        ( self.setting_data["Shortcut_SP"]     )
         self.Display_SP.setValue         ( self.setting_data["Display_SP"]      )
+        self.Tab_CB.setChecked           ( self.setting_data["Tab_CB"]          )
         
         for path,checked in self.setting_data["path"].iteritems():
             self.Path_Contianer.addItem(path,checked)
@@ -684,6 +668,8 @@ class SettingWindow(utils.QWidget):
         self.setting_data["Scroll_Lock_SP"]  = self.Scroll_Lock_SP.value()
         self.setting_data["Shortcut_SP"]     = self.Shortcut_SP.value()
         self.setting_data["Display_SP"]      = self.Display_SP.value()
+        self.setting_data["Tab_CB"]          = self.Tab_CB.isChecked()
+
         with open(path,'w') as f:
             json.dump(self.setting_data,f,indent=4)
  
@@ -710,3 +696,6 @@ class SettingWindow(utils.QWidget):
         self.search.shortcut_num = value
         self.exportJsonSetting(SETTING_PATH)
 
+    def setTabEnabled(self,state):
+        self.setting_data["Tab_CB"] = state
+        self.exportJsonSetting(SETTING_PATH)
